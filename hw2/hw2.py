@@ -101,11 +101,13 @@ class HelloWorld(cmd.Cmd):
         resultSet = defaultdict()
         for doc in self.termFreq:
           value=0
+          commonTerms = set()
           commonTerms = set(queryWeight.keys()).intersection(set(self.termFreq[doc]))
           for word in commonTerms:
             value = value + queryWeight[word]*self.termFreq[doc][word]
             #print word
-          resultSet[doc]=value
+          if len(commonTerms)>0:  
+            resultSet[doc]=value
           #print (doc,value)
         
         results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
