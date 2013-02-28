@@ -124,6 +124,55 @@ class HelloWorld(cmd.Cmd):
 
 
 
+    def do_pageRank(self,qwertrgrvm):
+      fr=open('mars_tweets_medium.json','r')
+      lines = fr.readlines()
+      numDocs=float(len(lines))
+      #numDocs = 4.0
+      #into = defaultdict()
+      #outOf = 
+      into = defaultdict(set) # {word : {1:2 }}
+      outOf = defaultdict(set) # {word : {1:2 }}
+      for line in lines:
+      #for i in range(0,100):
+       # line = lines[i]
+        json_data=json.loads(line)
+        rawTweetText = json_data['text']
+        userID = json_data['user']['screen_name']
+        tweetID = json_data['id']
+        tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
+        mentions = json_data['entities']['user_mentions']
+        #if len(mentions)>0:
+        outOf[userID] = set([m['screen_name'] for m in mentions])
+        if userID in outOf[userID]:
+          outOf[userID].remove(userID)
+
+        for mention in mentions:
+          if mention['screen_name'] != userID:
+            into[mention['screen_name']].add(userID)
+          #print mention['screen_name'] , json_data['user']['screen_name']
+
+          #print mentions
+      print len(into)
+      delList=set()
+      for user in outOf:
+        if len(outOf[user]) == 0:
+          for inuser in into:
+            if user in into[inuser]:
+              flag=1
+              break
+            flag=0
+          if flag ==0:
+            delList.update(user)
+
+      for item in delList:
+        del outOf[item]
+
+
+
+      print len(outOf)
+
+      
     def default(self,line):
         print "enter a valid command\n"
     
