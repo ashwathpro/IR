@@ -23,6 +23,15 @@ class HelloWorld(cmd.Cmd):
     def do_test(self,asgbtrh):
         testList=[(1,2),(3,4),(5,6)]
         print testList[-2:].reverse()
+        abc = [1,1,3]
+        abc.remove(1)
+        abc.remove(1)
+        abc.remove(3)
+        qwe = set()
+        qwe.add(2)
+
+        print qwe
+        print abc
             
     def do_parseFile(self,asdfrtg):
         fr=open('mars_tweets_medium.json','r')
@@ -133,44 +142,61 @@ class HelloWorld(cmd.Cmd):
       #outOf = 
       into = defaultdict(set) # {word : {1:2 }}
       outOf = defaultdict(set) # {word : {1:2 }}
+      allUsers = set()
       for line in lines:
-      #for i in range(0,100):
+      #for i in range(0,10):
        # line = lines[i]
         json_data=json.loads(line)
         rawTweetText = json_data['text']
-        userID = json_data['user']['screen_name']
+        userID = json_data['user']['id']
         tweetID = json_data['id']
         tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
         mentions = json_data['entities']['user_mentions']
-        #if len(mentions)>0:
-        outOf[userID] = set([m['screen_name'] for m in mentions])
-        if userID in outOf[userID]:
-          outOf[userID].remove(userID)
+        
+        allUsers.add(userID)
+        for m in mentions:
+          if m['id'] != userID:
+            outOf[userID].add(m['id'])
+            allUsers.add(m['id'])
+
+        #for user in outOf[userID]:
+
 
         for mention in mentions:
-          if mention['screen_name'] != userID:
-            into[mention['screen_name']].add(userID)
-          #print mention['screen_name'] , json_data['user']['screen_name']
+          if mention['id'] != userID:
+            into[mention['id']].add(userID)
+            allUsers.add(mention['id'])
+          #print mention['id'] , json_data['user']['id']
 
           #print mentions
       print len(into)
+
+      print "All users lenght", len(allUsers)
+      """
       delList=set()
       for user in outOf:
         if len(outOf[user]) == 0:
-          for inuser in into:
+          flag=0
+          for inuser in into and flag ==0:
             if user in into[inuser]:
               flag=1
               break
             flag=0
           if flag ==0:
             delList.update(user)
-
-      for item in delList:
-        del outOf[item]
-
-
-
+      
+      print len(delList)
+      """
+      #for item in delList:
+       # del outOf[item]
       print len(outOf)
+      properUsers = set((set(outOf.keys())|set(into.keys())))
+
+
+
+
+
+
 
       
     def default(self,line):
