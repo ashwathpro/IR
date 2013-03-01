@@ -181,22 +181,28 @@ class HelloWorld(cmd.Cmd):
     
       d = 0.1
       N= len(properUsers)
-      breakLimit = 0.4
+      breakLimit = 0.01
       iterEle=0
       while True:
         iterEle+=1
         #print "At iteration: ", iterEle
         for user in newUserToPR:
-          degree = float(len(outOf[user]))
+          #degree = float(len(outOf[user]))
           #print "degree" , degree , "len of out user:", len(outOf[user])
-          if degree ==0.0:
-            continue
-          valToSplit = oldUserToPR[user]/degree
+          #if degree ==0.0:
+           # continue
+          valSum =0.0
+          for inUser in into[user]:
+            degree = float(len(outOf[inUser]))
+            valToSplit = oldUserToPR[inUser]/degree
+            valSum = valSum+valToSplit
+           
           #print "val to split: " , valToSplit
-
+          newUserToPR[user] =d+ (1.0-d)*valSum
+          """
           for outUser in outOf[user]:
             newUserToPR[outUser] = (1.0-d)*(oldUserToPR[outUser] + valToSplit) + d
-
+          """
         
         diffPR = [float(j-i) for i,j in zip(oldUserToPR.values() ,newUserToPR.values())] 
         """
@@ -210,15 +216,15 @@ class HelloWorld(cmd.Cmd):
           poiuy=raw_input('Enter your input:')
           print diffPR
         """
-        if all([math.fabs(indivPR) <= breakLimit for indivPR in diffPR ]) or iterEle>=100: 
+        if all([math.fabs(indivPR) <= breakLimit for indivPR in diffPR ]) or iterEle>=500: 
           break
         #oldUserToPR=newUserToPR
 
         for user in newUserToPR:
           oldUserToPR[user] = newUserToPR[user]
 
-        sumToNorm = sum(newUserToPR.values())
-        print "sumToNorm: ", sumToNorm
+        #sumToNorm = sum(newUserToPR.values())
+        #print "sumToNorm: ", sumToNorm
 
       # sort PR and print
       print "out of the loop\n"
@@ -236,10 +242,10 @@ class HelloWorld(cmd.Cmd):
       finalResultsSorted=sortedUsersByPR[-50:]
       finalResultsSorted.reverse()
       #print finalResultsSorted
-      print iterEle
+      print "num iter: ",iterEle
       for key in range(0,len(finalResultsSorted)):
         print (finalResultsSorted[key][0],self.UIDtoScreenName[finalResultsSorted[key][0]],finalResultsSorted[key][1])
-      print newUserToPR['MarsCuriosity']
+      #print newUserToPR['MarsCuriosity']
       #for item in finalResultsSorted:
        # print (self.UIDtoScreenName[finalResultsSorted[item][0]] , finalResultsSorted[item][1])
 
