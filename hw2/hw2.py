@@ -13,6 +13,7 @@ class HelloWorld(cmd.Cmd):
     termFreq = defaultdict(lambda:defaultdict()) # {word : {1:2 }}
     idfList = defaultdict(set)
     idf = defaultdict()
+    UIDtoScreenName = defaultdict()     # {ID: screen_name}
     tfIdfWeight = defaultdict(lambda:defaultdict()) # {document : {word : tf-idf }}
 
     
@@ -23,6 +24,7 @@ class HelloWorld(cmd.Cmd):
     def do_test(self,asgbtrh):
         testList=[(1,2),(3,4),(5,6)]
         asd = [1]*6
+        print sum(asd)
         qwe = [1.0]*6
         for i in range(0,6):
           print qwe[i]
@@ -136,12 +138,16 @@ class HelloWorld(cmd.Cmd):
       outOf = defaultdict(set) # {word : {1:2 }}
       allUsers = set()
       for line in lines:
-      #for i in range(0,10):
+      #for i in range(0,40):
        # line = lines[i]
         json_data=json.loads(line)
         rawTweetText = json_data['text']
         userID = json_data['user']['id']
         tweetID = json_data['id']
+        userScreenName = json_data['user']['screen_name']
+
+        self.UIDtoScreenName[userID] = userScreenName
+        
         tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
         mentions = json_data['entities']['user_mentions']
         
@@ -157,11 +163,13 @@ class HelloWorld(cmd.Cmd):
         for mention in mentions:
           if mention['id'] != userID:
             into[mention['id']].add(userID)
+            self.UIDtoScreenName[mention['id']] = mention['screen_name']
             allUsers.add(mention['id'])
           #print mention['id'] , json_data['user']['id']
 
           #print mentions
       print len(into)
+      print len(self.UIDtoScreenName)
 
       properUsers = set((set(outOf.keys())|set(into.keys())))
       oldUserToPR = defaultdict(float)
@@ -173,29 +181,67 @@ class HelloWorld(cmd.Cmd):
     
       d = 0.1
       N= len(properUsers)
-      breakLimit = 0.001
+      breakLimit = 0.4
+      iterEle=0
       while True:
+        iterEle+=1
+        #print "At iteration: ", iterEle
         for user in newUserToPR:
           degree = float(len(outOf[user]))
+          #print "degree" , degree , "len of out user:", len(outOf[user])
+          if degree ==0.0:
+            continue
           valToSplit = oldUserToPR[user]/degree
+          #print "val to split: " , valToSplit
 
           for outUser in outOf[user]:
             newUserToPR[outUser] = (1.0-d)*(oldUserToPR[outUser] + valToSplit) + d
 
         
-        diffPR = [i-j for i,j in zip(oldUserToPR ,newUserToPR)] 
-        if all([math.fabs(indivPR) <= breakLimit for indivPR in diffPR ]): 
+        diffPR = [float(j-i) for i,j in zip(oldUserToPR.values() ,newUserToPR.values())] 
+        """
+        #print diffPR
+        print "old values: ",oldUserToPR.values()
+        print "new values: ",newUserToPR.values()
+        print
+        #"""
+        """
+        if iterEle>50:
+          poiuy=raw_input('Enter your input:')
+          print diffPR
+        """
+        if all([math.fabs(indivPR) <= breakLimit for indivPR in diffPR ]) or iterEle>=100: 
           break
+        #oldUserToPR=newUserToPR
+
+        for user in newUserToPR:
+          oldUserToPR[user] = newUserToPR[user]
+
+        sumToNorm = sum(newUserToPR.values())
+        print "sumToNorm: ", sumToNorm
 
       # sort PR and print
+      print "out of the loop\n"
+  
+      sumToNorm=0.0
+
+      sumToNorm = sum(newUserToPR.values())
+      print "sumToNorm: ", sumToNorm
+      
+      for user in newUserToPR:
+        newUserToPR[user] = newUserToPR[user]/sumToNorm
 
       sortedUsersByPR=[(key,val) for key, val in sorted(newUserToPR.iteritems(), key=lambda (k,v): (v,k))]
-      print len(sortedUsersByPR),"Results found"
+      print len(sortedUsersByPR),"Length of sorted users after PR"
       finalResultsSorted=sortedUsersByPR[-50:]
       finalResultsSorted.reverse()
       #print finalResultsSorted
-      for item in finalResultsSorted:
-        print item 
+      print iterEle
+      for key in range(0,len(finalResultsSorted)):
+        print (finalResultsSorted[key][0],self.UIDtoScreenName[finalResultsSorted[key][0]],finalResultsSorted[key][1])
+      print newUserToPR['MarsCuriosity']
+      #for item in finalResultsSorted:
+       # print (self.UIDtoScreenName[finalResultsSorted[item][0]] , finalResultsSorted[item][1])
 
 
 
