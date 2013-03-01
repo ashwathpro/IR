@@ -22,16 +22,11 @@ class HelloWorld(cmd.Cmd):
     
     def do_test(self,asgbtrh):
         testList=[(1,2),(3,4),(5,6)]
-        print testList[-2:].reverse()
-        abc = [1,1,3]
-        abc.remove(1)
-        abc.remove(1)
-        abc.remove(3)
-        qwe = set()
-        qwe.add(2)
-
-        print qwe
-        print abc
+        asd = [1]*6
+        qwe = [1.0]*6
+        for i in range(0,6):
+          print qwe[i]
+        print [i-j for i,j in zip(asd ,qwe)]
             
     def do_parseFile(self,asdfrtg):
         fr=open('mars_tweets_medium.json','r')
@@ -137,9 +132,6 @@ class HelloWorld(cmd.Cmd):
       fr=open('mars_tweets_medium.json','r')
       lines = fr.readlines()
       numDocs=float(len(lines))
-      #numDocs = 4.0
-      #into = defaultdict()
-      #outOf = 
       into = defaultdict(set) # {word : {1:2 }}
       outOf = defaultdict(set) # {word : {1:2 }}
       allUsers = set()
@@ -171,26 +163,58 @@ class HelloWorld(cmd.Cmd):
           #print mentions
       print len(into)
 
-      print "All users lenght", len(allUsers)
-      """
-      delList=set()
-      for user in outOf:
-        if len(outOf[user]) == 0:
-          flag=0
-          for inuser in into and flag ==0:
-            if user in into[inuser]:
-              flag=1
-              break
-            flag=0
-          if flag ==0:
-            delList.update(user)
-      
-      print len(delList)
-      """
-      #for item in delList:
-       # del outOf[item]
-      print len(outOf)
       properUsers = set((set(outOf.keys())|set(into.keys())))
+      oldUserToPR = defaultdict(float)
+      newUserToPR = defaultdict(float)
+      for user in properUsers:
+        oldUserToPR[user]=1.0
+        newUserToPR[user]=1.0
+
+    
+      d = 0.1
+      N= len(properUsers)
+      breakLimit = 0.001
+      while True:
+        for user in newUserToPR:
+          degree = float(len(outOf[user]))
+          valToSplit = oldUserToPR[user]/degree
+
+          for outUser in outOf[user]:
+            newUserToPR[outUser] = (1.0-d)*(oldUserToPR[outUser] + valToSplit) + d
+
+        
+        diffPR = [i-j for i,j in zip(oldUserToPR ,newUserToPR)] 
+        if all([math.fabs(indivPR) <= breakLimit for indivPR in diffPR ]): 
+          break
+
+      # sort PR and print
+
+      sortedUsersByPR=[(key,val) for key, val in sorted(newUserToPR.iteritems(), key=lambda (k,v): (v,k))]
+      print len(sortedUsersByPR),"Results found"
+      finalResultsSorted=sortedUsersByPR[-50:]
+      finalResultsSorted.reverse()
+      #print finalResultsSorted
+      for item in finalResultsSorted:
+        print item 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       
+
 
 
 
