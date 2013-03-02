@@ -15,13 +15,21 @@ class HelloWorld(cmd.Cmd):
     idf = defaultdict()
     UIDtoScreenName = defaultdict()     # {ID: screen_name}
     tfIdfWeight = defaultdict(lambda:defaultdict()) # {document : {word : tf-idf }}
-
+    into_links = defaultdict(set) # {word : {1:2 }}
+    outOf_links = defaultdict(set) # {word : {1:2 }}
+    allUsers_set = set()
     
     def do_EOF(self,line):
+        """
+        End program and return to command line.
+        """
         return True
         
     
     def do_test(self,asgbtrh):
+        """
+        A dummy function to test small pieces of code
+        """
         testList=[(1,2),(3,4),(5,6)]
         asd = [1]*6
         print sum(asd)
@@ -31,17 +39,41 @@ class HelloWorld(cmd.Cmd):
         print [i-j for i,j in zip(asd ,qwe)]
             
     def do_parseFile(self,asdfrtg):
+        """
+        Parse the entire tweet corpus for tf-idf and for pagerank [Run this command first before running any other command]
+        """
         fr=open('mars_tweets_medium.json','r')
         lines = fr.readlines()
         numDocs=float(len(lines))
+        into = defaultdict(set) # {word : {1:2 }}
+        outOf = defaultdict(set) # {word : {1:2 }}
+        allUsers = set()
+
         #numDocs = 4.0
         for line in lines:
         #for i in range(0,4):
           json_data=json.loads(line)
           rawTweetText = json_data['text']
-
+          userID = json_data['user']['id']
           tweetID = json_data['id']
+          userScreenName = json_data['user']['screen_name']
+          
+          self.UIDtoScreenName[userID] = userScreenName
+
           tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
+          mentions = json_data['entities']['user_mentions']
+
+          allUsers.add(userID)
+          for m in mentions:
+            if m['id'] != userID:
+              outOf[userID].add(m['id'])
+              allUsers.add(m['id'])
+
+          for mention in mentions:
+            if mention['id'] != userID:
+              into[mention['id']].add(userID)
+              self.UIDtoScreenName[mention['id']] = mention['screen_name']
+              allUsers.add(mention['id']) 
 
           self.actualTweets[tweetID] =rawTweetText 
           words = tweetText
@@ -74,10 +106,20 @@ class HelloWorld(cmd.Cmd):
           for word in self.tfIdfWeight[doc]:
             self.tfIdfWeight[doc][word] =  self.tfIdfWeight[doc][word]/math.sqrt(sumNorm) 
 
-
         fr.close()
 
+        for item in into:
+          self.into_links[item] = into[item]
+        for item in outOf:
+          self.outOf_links[item] = outOf[item]
+
+        self.allUsers_set.update(allUsers)
+
+
     def do_query(self,lineadfsggh):
+        """
+        Enter a query to search using tf-idf technique
+        """
         q=raw_input("Enter a query: ")
 
         queryWeight = defaultdict()
@@ -127,47 +169,17 @@ class HelloWorld(cmd.Cmd):
           print (finalResultsSorted[key][0],self.actualTweets[finalResultsSorted[key][0]],finalResultsSorted[key][1])
 
 
-
-
-
     def do_pageRank(self,qwertrgrvm):
-      fr=open('mars_tweets_medium.json','r')
-      lines = fr.readlines()
-      numDocs=float(len(lines))
-      into = defaultdict(set) # {word : {1:2 }}
-      outOf = defaultdict(set) # {word : {1:2 }}
-      allUsers = set()
-      for line in lines:
-      #for i in range(0,40):
-       # line = lines[i]
-        json_data=json.loads(line)
-        rawTweetText = json_data['text']
-        userID = json_data['user']['id']
-        tweetID = json_data['id']
-        userScreenName = json_data['user']['screen_name']
+      """
+      Performs a page ranking on the users [run the parseFile command before running this command]     
+      """
+      
+      into = self.into_links # {word : {1:2 }}
+      outOf = self.outOf_links  # {word : {1:2 }}
+      allUsers = self.allUsers_set
+      
+      #### Page rank algorithm
 
-        self.UIDtoScreenName[userID] = userScreenName
-        
-        tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
-        mentions = json_data['entities']['user_mentions']
-        
-        allUsers.add(userID)
-        for m in mentions:
-          if m['id'] != userID:
-            outOf[userID].add(m['id'])
-            allUsers.add(m['id'])
-
-        #for user in outOf[userID]:
-
-
-        for mention in mentions:
-          if mention['id'] != userID:
-            into[mention['id']].add(userID)
-            self.UIDtoScreenName[mention['id']] = mention['screen_name']
-            allUsers.add(mention['id'])
-          #print mention['id'] , json_data['user']['id']
-
-          #print mentions
       print len(into)
       print len(self.UIDtoScreenName)
 
@@ -177,7 +189,6 @@ class HelloWorld(cmd.Cmd):
       for user in properUsers:
         oldUserToPR[user]=1.0
         newUserToPR[user]=1.0
-
     
       d = 0.1
       N= len(properUsers)
@@ -211,11 +222,6 @@ class HelloWorld(cmd.Cmd):
         print "new values: ",newUserToPR.values()
         print
         #"""
-        """
-        if iterEle>50:
-          poiuy=raw_input('Enter your input:')
-          print diffPR
-        """
         if all([math.fabs(indivPR) <= breakLimit for indivPR in diffPR ]) or iterEle>=500: 
           break
         #oldUserToPR=newUserToPR
@@ -248,31 +254,6 @@ class HelloWorld(cmd.Cmd):
       #print newUserToPR['MarsCuriosity']
       #for item in finalResultsSorted:
        # print (self.UIDtoScreenName[finalResultsSorted[item][0]] , finalResultsSorted[item][1])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       
-
-
-
-
-
-
-
 
       
     def default(self,line):
