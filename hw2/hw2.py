@@ -18,6 +18,8 @@ class HelloWorld(cmd.Cmd):
     into_links = defaultdict(set) # {word : {1:2 }}
     outOf_links = defaultdict(set) # {word : {1:2 }}
     allUsers_set = set()
+    pageRankUsers = defaultdict()   # {userID: pageRank}
+
     
     def do_EOF(self,line):
         """
@@ -130,9 +132,9 @@ class HelloWorld(cmd.Cmd):
         for word in queryText:
           word = word.lower()
           if word in queryTermFreq:
-            queryTermFreq[word] = queryTermFreq[word]+1
+            queryTermFreq[word] = queryTermFreq[word]+1.0
           else:
-            queryTermFreq[word] = 1
+            queryTermFreq[word] = 1.0
         #print queryTermFreq
         sumNorm=0
         for word in queryTermFreq:
@@ -147,17 +149,25 @@ class HelloWorld(cmd.Cmd):
 
         print queryWeight
         resultSet = defaultdict()
-        for doc in self.termFreq:
+        for doc in self.tfIdfWeight:
           value=0
           commonTerms = set()
           commonTerms = set(queryWeight.keys()).intersection(set(self.termFreq[doc]))
           for word in commonTerms:
-            value = value + queryWeight[word]*self.termFreq[doc][word]
+            #value = value + queryWeight[word]*self.termFreq[doc][word]
+            value = value + queryWeight[word]*self.tfIdfWeight[doc][word]
             #print word
           if len(commonTerms)>0:  
             resultSet[doc]=value
           #print (doc,value)
-        
+
+        sumToNorm = sum(resultSet.values())
+        print "sumToNorm: ", sumToNorm
+      
+        for user in resultSet:
+          resultSet[user] = resultSet[user]/sumToNorm
+
+       
         results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
               #print "%s: %s" % (key, value)
               #results.append(tuple(key,value))
