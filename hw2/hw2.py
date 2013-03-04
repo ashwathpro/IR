@@ -9,7 +9,8 @@ import math
 
 class HelloWorld(cmd.Cmd):
     """Simple command processor example."""
-    actualTweets = defaultdict()  # {tweetID: tweet text}
+    actualTweets = defaultdict()  # {tweetID : tweet text}
+    whoTweeted = defaultdict()    # {tweetID : userID  }
     termFreq = defaultdict(lambda:defaultdict()) # {word : {1:2 }}
     idfList = defaultdict(set)
     idf = defaultdict()
@@ -18,8 +19,8 @@ class HelloWorld(cmd.Cmd):
     into_links = defaultdict(set) # {word : {1:2 }}
     outOf_links = defaultdict(set) # {word : {1:2 }}
     allUsers_set = set()
-    pageRankUsers = defaultdict()   # {userID: pageRank}
-
+    pageRankUsers = defaultdict()   # {userID, pageRank}
+    
     
     def do_EOF(self,line):
         """
@@ -34,11 +35,27 @@ class HelloWorld(cmd.Cmd):
         """
         testList=[(1,2),(3,4),(5,6)]
         asd = [1]*6
-        print sum(asd)
+
+        """ 
+        print self.pageRankUsers[0:4]
+        for doc in self.tfIdfWeight:
+          print max(self.tfIdfWeight[doc].values()) , min(self.tfIdfWeight[doc].values())
+          break
+        """
+        #print sum(asd)
         qwe = [1.0]*6
-        for i in range(0,6):
-          print qwe[i]
-        print [i-j for i,j in zip(asd ,qwe)]
+        #for i in range(0,6):
+          #print qwe[i]
+        #print [i-j for i,j in zip(asd ,qwe)]
+        mypageRank = defaultdict()  # {userID : PR}   normalized
+        minValPR = min(self.pageRankUsers.values())
+        maxValPR = max(self.pageRankUsers.values())
+        for user in self.pageRankUsers:
+          mypageRank[user] = (self.pageRankUsers[user]-minValPR)/(maxValPR-minValPR)  # normalize pagerank values
+        #print self.pageRankUsers['16692597']
+        #print mypageRank['16692597']
+
+
             
     def do_parseFile(self,asdfrtg):
         """
@@ -50,6 +67,8 @@ class HelloWorld(cmd.Cmd):
         into = defaultdict(set) # {word : {1:2 }}
         outOf = defaultdict(set) # {word : {1:2 }}
         allUsers = set()
+        #retweetCount = defaultdict() # {tweetID : num of retweets}
+        idf = defaultdict()
 
         #numDocs = 4.0
         for line in lines:
@@ -59,8 +78,12 @@ class HelloWorld(cmd.Cmd):
           userID = json_data['user']['id']
           tweetID = json_data['id']
           userScreenName = json_data['user']['screen_name']
+          retweetCount = json_data['retweet_count']
+          numDocs += retweetCount 
+          
           
           self.UIDtoScreenName[userID] = userScreenName
+          self.whoTweeted[tweetID] = userID
 
           tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
           mentions = json_data['entities']['user_mentions']
@@ -83,7 +106,12 @@ class HelloWorld(cmd.Cmd):
           for word in words:
             word = word.lower()
             self.idfList[word].add(tweetID)
-        
+            # """
+            if word in idf:
+              idf[word] = idf[word]+(1 + retweetCount)
+            else:
+              idf[word] = 1
+            # """
             if word in docTermFreq:
               docTermFreq[word] = docTermFreq[word]+1
             else:
@@ -93,7 +121,8 @@ class HelloWorld(cmd.Cmd):
           #print self.termFreq[tweetID]
         #print len(self.idf)
         for word in self.idfList:
-          self.idf[word] = math.log(numDocs/len(self.idfList[word]),2)
+          self.idf[word] = math.log(numDocs/(idf[word]),2)
+          #self.idf[word] = math.log(numDocs/len(self.idfList[word]),2)
 
         print self.idf['mars']
         for doc in self.termFreq:
@@ -117,8 +146,104 @@ class HelloWorld(cmd.Cmd):
 
         self.allUsers_set.update(allUsers)
 
+    def do_queryWithTFIDFandPageRank(self,aohudskvhfcjfjh):
 
-    def do_query(self,lineadfsggh):
+        """
+        Enter a query to search using tf-idf and then apply pageRank to influence the result. Run PageRank command before running this command
+        """
+        q=raw_input("Enter a query: ")
+
+        queryWeight = defaultdict()
+
+        queryText = re.split('[\W]+',q,flags=re.UNICODE)
+        #print queryText
+        queryTermFreq = defaultdict()
+        for word in queryText:
+          word = word.lower()
+          if word in queryTermFreq:
+            queryTermFreq[word] = queryTermFreq[word]+1.0
+          else:
+            queryTermFreq[word] = 1.0
+        #print queryTermFreq
+        sumNorm=0
+        for word in queryTermFreq:
+          if queryTermFreq[word] > 0:
+            queryTermFreq[word] = 1 + math.log(queryTermFreq[word] ,2)
+          else:
+            queryTermFreq[word] = 0
+          queryWeight[word] = queryTermFreq[word] * self.idf[word]
+          sumNorm = sumNorm + queryWeight[word]*queryWeight[word]
+        for word in queryWeight:
+          queryWeight[word]= queryWeight[word]/math.sqrt(sumNorm)
+
+        print queryWeight
+        resultSet = defaultdict()
+        for doc in self.tfIdfWeight:
+          value=0
+          commonTerms = set()
+          commonTerms = set(queryWeight.keys()).intersection(set(self.termFreq[doc]))
+          for word in commonTerms:
+            value = value + queryWeight[word]*self.tfIdfWeight[doc][word]
+            #print word
+          if len(commonTerms)>0:  
+            resultSet[doc]=value
+          #print (doc,value)
+
+        """
+        sumToNorm = sum(resultSet.values())
+        print "sumToNorm: ", sumToNorm
+      
+        for user in resultSet:
+          resultSet[user] = resultSet[user]/sumToNorm
+        """
+
+        properUsers = set((set(self.outOf_links.keys())|set(self.into_links.keys())))
+
+        minValTFIDF = min(resultSet.values())
+        maxValTFIDF = max(resultSet.values())
+ 
+        mypageRank = defaultdict()  # {userID : PR}   normalized
+        minValPR = min(self.pageRankUsers.values())
+        maxValPR = max(self.pageRankUsers.values())
+        for user in self.pageRankUsers:
+          mypageRank[user] = (self.pageRankUsers[user]-minValPR)/(maxValPR-minValPR)  # normalize pagerank values
+        print "lenth of PR : ",len(mypageRank) , len(self.pageRankUsers) 
+        myresultSet = defaultdict()
+        for doc in resultSet:
+          myresultSet[doc] = (resultSet[doc]-minValTFIDF)/(maxValTFIDF-minValTFIDF)     # normalize TF-IDF values
+ 
+        #for alpha in [0.2, 0.4, 0.6, 0.8]:
+        alpha = 0.3
+        print "printing with alpha: ", alpha
+
+         #actual technique of merging pagerank score of user to his tweet
+        prKeys = mypageRank.keys()
+        for doc in resultSet:
+          #print doc
+          userid = self.whoTweeted[doc]
+          if userid in prKeys:
+            myresultSet[doc] = (alpha)*myresultSet[doc] + (1.0-alpha)*mypageRank[userid]
+          else:
+            myresultSet[doc] = 0.0
+        print "out of loop"
+        results=[(key,val) for key, val in sorted(myresultSet.iteritems(), key=lambda (k,v): (v,k))]
+        print len(results),"Results found"
+        finalResultsSorted=results[-50:]
+        finalResultsSorted.reverse()
+        #print finalResultsSorted
+        for key in range(0,len(finalResultsSorted)):
+          print (finalResultsSorted[key][0],self.actualTweets[finalResultsSorted[key][0]],finalResultsSorted[key][1])
+   
+  
+  
+   
+   
+          
+
+
+
+
+    def do_queryWithTFIDF(self,lineadfsggh):
         """
         Enter a query to search using tf-idf technique
         """
@@ -154,7 +279,6 @@ class HelloWorld(cmd.Cmd):
           commonTerms = set()
           commonTerms = set(queryWeight.keys()).intersection(set(self.termFreq[doc]))
           for word in commonTerms:
-            #value = value + queryWeight[word]*self.termFreq[doc][word]
             value = value + queryWeight[word]*self.tfIdfWeight[doc][word]
             #print word
           if len(commonTerms)>0:  
@@ -169,8 +293,6 @@ class HelloWorld(cmd.Cmd):
 
        
         results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
-              #print "%s: %s" % (key, value)
-              #results.append(tuple(key,value))
         print len(results),"Results found"
         finalResultsSorted=results[-50:]
         finalResultsSorted.reverse()
@@ -256,12 +378,17 @@ class HelloWorld(cmd.Cmd):
       sortedUsersByPR=[(key,val) for key, val in sorted(newUserToPR.iteritems(), key=lambda (k,v): (v,k))]
       print len(sortedUsersByPR),"Length of sorted users after PR"
       finalResultsSorted=sortedUsersByPR[-50:]
+      L = len(sortedUsersByPR)
+      for i in range(0,L-1):
+        self.pageRankUsers[sortedUsersByPR[i][0]] = sortedUsersByPR[i][1]
+
+
       finalResultsSorted.reverse()
       #print finalResultsSorted
       print "num iter: ",iterEle
       for key in range(0,len(finalResultsSorted)):
         print (finalResultsSorted[key][0],self.UIDtoScreenName[finalResultsSorted[key][0]],finalResultsSorted[key][1])
-      #print newUserToPR['MarsCuriosity']
+
       #for item in finalResultsSorted:
        # print (self.UIDtoScreenName[finalResultsSorted[item][0]] , finalResultsSorted[item][1])
 
