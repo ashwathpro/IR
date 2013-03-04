@@ -198,6 +198,7 @@ class HelloWorld(cmd.Cmd):
         """
 
         properUsers = set((set(self.outOf_links.keys())|set(self.into_links.keys())))
+        deletedUsers = set(set(self.allUsers_set)-set(properUsers))
 
         minValTFIDF = min(resultSet.values())
         maxValTFIDF = max(resultSet.values())
@@ -207,6 +208,10 @@ class HelloWorld(cmd.Cmd):
         maxValPR = max(self.pageRankUsers.values())
         for user in self.pageRankUsers:
           mypageRank[user] = (self.pageRankUsers[user]-minValPR)/(maxValPR-minValPR)  # normalize pagerank values
+
+        for user in deletedUsers:
+          mypageRank[user] = 0.0
+
         print "lenth of PR : ",len(mypageRank) , len(self.pageRankUsers) 
         myresultSet = defaultdict()
         for doc in resultSet:
@@ -221,10 +226,10 @@ class HelloWorld(cmd.Cmd):
         for doc in resultSet:
           #print doc
           userid = self.whoTweeted[doc]
-          if userid in prKeys:
-            myresultSet[doc] = (alpha)*myresultSet[doc] + (1.0-alpha)*mypageRank[userid]
-          else:
-            myresultSet[doc] = 0.0
+          #if userid in prKeys:
+          myresultSet[doc] = (alpha)*myresultSet[doc] + (1.0-alpha)*mypageRank[userid]
+          #else:
+          #  myresultSet[doc] = 0.0
         print "out of loop"
         results=[(key,val) for key, val in sorted(myresultSet.iteritems(), key=lambda (k,v): (v,k))]
         print len(results),"Results found"
@@ -379,7 +384,7 @@ class HelloWorld(cmd.Cmd):
       print len(sortedUsersByPR),"Length of sorted users after PR"
       finalResultsSorted=sortedUsersByPR[-50:]
       L = len(sortedUsersByPR)
-      for i in range(0,L-1):
+      for i in range(0,L):
         self.pageRankUsers[sortedUsersByPR[i][0]] = sortedUsersByPR[i][1]
 
 
