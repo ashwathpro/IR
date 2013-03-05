@@ -6,6 +6,7 @@ import cmd
 import json
 from pprint import pprint 
 import math
+import random
 
 class HelloWorld(cmd.Cmd):
     """Simple command processor example."""
@@ -20,6 +21,7 @@ class HelloWorld(cmd.Cmd):
     outOf_links = defaultdict(set) # {word : {1:2 }}
     allUsers_set = set()
     pageRankUsers = defaultdict()   # {userID, pageRank}
+    topics = set()
     
     
     def do_EOF(self,line):
@@ -76,12 +78,26 @@ class HelloWorld(cmd.Cmd):
           json_data=json.loads(line)
           rawTweetText = json_data['text']
           userID = json_data['user']['id']
+          """try:
+            userDesc = json_data['user']['description']
+          except KeyError:
+            aprwnmoim=1
+          """
           tweetID = json_data['id']
           userScreenName = json_data['user']['screen_name']
           retweetCount = json_data['retweet_count']
           numDocs += retweetCount 
-          
-          
+          """
+          if len(userDesc)>1:
+            try:
+              with open('user_descText.txt','a') as fw:
+                #print userDesc
+                fw.write(userDesc)
+            except UnicodeEncodeError: 
+              #print userDesc
+              aprwnmoim=1
+              #continue
+          """
           self.UIDtoScreenName[userID] = userScreenName
           self.whoTweeted[tweetID] = userID
 
@@ -138,6 +154,7 @@ class HelloWorld(cmd.Cmd):
             self.tfIdfWeight[doc][word] =  self.tfIdfWeight[doc][word]/math.sqrt(sumNorm) 
 
         fr.close()
+        #fw.close()
 
         for item in into:
           self.into_links[item] = into[item]
@@ -145,9 +162,10 @@ class HelloWorld(cmd.Cmd):
           self.outOf_links[item] = outOf[item]
 
         self.allUsers_set.update(allUsers)
+        self.do_pageRank(self)
+        self.do_tsa(self)
 
     def do_queryWithTFIDFandPageRank(self,aohudskvhfcjfjh):
-
         """
         Enter a query to search using tf-idf and then apply pageRank to influence the result. Run PageRank command before running this command
         """
@@ -217,33 +235,172 @@ class HelloWorld(cmd.Cmd):
         for doc in resultSet:
           myresultSet[doc] = (resultSet[doc]-minValTFIDF)/(maxValTFIDF-minValTFIDF)     # normalize TF-IDF values
  
-        #for alpha in [0.2, 0.4, 0.6, 0.8]:
-        alpha = 0.3
-        print "printing with alpha: ", alpha
-
-         #actual technique of merging pagerank score of user to his tweet
         prKeys = mypageRank.keys()
-        for doc in resultSet:
-          #print doc
-          userid = self.whoTweeted[doc]
-          #if userid in prKeys:
-          myresultSet[doc] = (alpha)*myresultSet[doc] + (1.0-alpha)*mypageRank[userid]
-          #else:
-          #  myresultSet[doc] = 0.0
-        print "out of loop"
-        results=[(key,val) for key, val in sorted(myresultSet.iteritems(), key=lambda (k,v): (v,k))]
-        print len(results),"Results found"
-        finalResultsSorted=results[-50:]
-        finalResultsSorted.reverse()
-        #print finalResultsSorted
-        for key in range(0,len(finalResultsSorted)):
-          print (finalResultsSorted[key][0],self.actualTweets[finalResultsSorted[key][0]],finalResultsSorted[key][1])
+        for alpha in [0.2, 0.4, 0.6, 0.8]:
+          myresultSet1 = defaultdict()
+          myresultSet1 = myresultSet 
+          #alpha = 0.3
+          print "printing with alpha: ", alpha
+         
+           #actual technique of merging pagerank score of user to his tweet
+          for doc in resultSet:
+            #print doc
+            userid = self.whoTweeted[doc]
+            #if userid in prKeys:
+            myresultSet1[doc] = (alpha)*myresultSet[doc] + (1.0-alpha)*mypageRank[userid]
+            #else:
+            #  myresultSet[doc] = 0.0
+          print "out of loop"
+          results=[(key,val) for key, val in sorted(myresultSet1.iteritems(), key=lambda (k,v): (v,k))]
+          print len(results),"Results found"
+          finalResultsSorted=results[-50:]
+          finalResultsSorted.reverse()
+          #print finalResultsSorted
+          L = len(finalResultsSorted)
+          for key in range(0,L):
+            print (finalResultsSorted[key][0],self.actualTweets[finalResultsSorted[key][0]],finalResultsSorted[key][1])
    
   
   
    
    
           
+
+
+
+    def do_tsa(self, aonfeiutioruntef):
+      """
+      To perform a topic sensitive pagerank on the topics mentioned in the program
+      """
+      # creating topics:
+
+      topics = self.topics
+      topics.add("Arts")
+      topics.add("teens")
+      topics.add("Regional")
+      topics.add("Science")
+      topics.add("Sports")
+      topics.add("Home")
+      topics.add("Recreation")
+      topics.add("News")
+      topics.add("Reference")
+      topics.add("kids")
+      topics.add("Society")
+      topics.add("Shopping")
+      topics.add("World")
+      topics.add("Health")
+      topics.add("Games")
+      topics.add("Computers")
+      topics.add("Business")
+      for topic in topics:
+        topic = topic.lower()
+      
+      # assigning topics -> users
+      
+      into = self.into_links # {word : {1:2 }}
+      outOf = self.outOf_links  # {word : {1:2 }}
+      topicUsers = defaultdict(set)   #{topic : set(userIDs) }
+
+      properUsers = set(set(self.outOf_links.keys()) | set(self.into_links.keys()) )
+      #properUsers = set("ashwath")
+      #randomly assign users to topics
+      for user in properUsers:
+        rnd = []
+        rnd = random.sample(topics,1)
+        for t in rnd:
+          topic = t
+          break
+        #print "Topic: ",topic
+        topicUsers[topic].add(user)
+        topicUsers[topic].update(set(into[user]) | set(outOf[user]) )
+       
+      
+      for  topic in topics:
+        #### Page rank algorithm
+       
+        print "Topic: " ,topic
+        properUsers = topicUsers[topic]
+        oldUserToPR = defaultdict(float)
+        newUserToPR = defaultdict(float)
+        for user in properUsers:
+          oldUserToPR[user]=1.0
+          newUserToPR[user]=1.0
+       
+        d = 0.1
+        N= len(properUsers)
+        breakLimit = 0.1
+        iterEle=0
+        while True:
+          iterEle+=1
+          #print "At iteration: ", iterEle
+          for user in newUserToPR:
+            #degree = float(len(outOf[user]))
+            #print "degree" , degree , "len of out user:", len(outOf[user])
+            #if degree ==0.0:
+             # continue
+            valSum =0.0
+            for inUser in into[user]:
+              degree = float(len(outOf[inUser]))
+              valToSplit = oldUserToPR[inUser]/degree
+              valSum = valSum+valToSplit
+       
+            #print "val to split: " , valToSplit
+            newUserToPR[user] =d+ (1.0-d)*valSum
+            """
+            for outUser in outOf[user]:
+              newUserToPR[outUser] = (1.0-d)*(oldUserToPR[outUser] + valToSplit) + d
+            """
+       
+          diffPR = [float(j-i) for i,j in zip(oldUserToPR.values() ,newUserToPR.values())] 
+          """
+          #print diffPR
+          print "old values: ",oldUserToPR.values()
+          print "new values: ",newUserToPR.values()
+          print
+          #"""
+          if all([math.fabs(indivPR) <= breakLimit for indivPR in diffPR ]) or iterEle>=150: 
+            break
+          #oldUserToPR=newUserToPR
+       
+          for user in newUserToPR:
+            oldUserToPR[user] = newUserToPR[user]
+       
+          #sumToNorm = sum(newUserToPR.values())
+          #print "sumToNorm: ", sumToNorm
+       
+        # sort PR and print
+       
+        sumToNorm=0.0
+       
+        sumToNorm = sum(newUserToPR.values())
+       
+        for user in newUserToPR:
+          newUserToPR[user] = newUserToPR[user]/sumToNorm
+       
+        sortedUsersByPR=[(key,val) for key, val in sorted(newUserToPR.iteritems(), key=lambda (k,v): (v,k))]
+        finalResultsSorted=sortedUsersByPR[-10:]
+        L = len(sortedUsersByPR)
+        for i in range(0,L):
+          self.pageRankUsers[sortedUsersByPR[i][0]] = sortedUsersByPR[i][1]
+       
+       
+        finalResultsSorted.reverse()
+        #print finalResultsSorted
+        print "num iter: ",iterEle
+        for key in range(0,len(finalResultsSorted)):
+          print (finalResultsSorted[key][0],self.UIDtoScreenName[finalResultsSorted[key][0]],finalResultsSorted[key][1])
+
+
+
+        
+
+
+
+
+
+
+
+
 
 
 
