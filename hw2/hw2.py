@@ -63,6 +63,8 @@ class HelloWorld(cmd.Cmd):
         """
         Parse the entire tweet corpus for tf-idf and for pagerank [Run this command first before running any other command]
         """
+
+        print "Parsing file.. please wait.."
         fr=open('mars_tweets_medium.json','r')
         lines = fr.readlines()
         numDocs=float(len(lines))
@@ -140,7 +142,7 @@ class HelloWorld(cmd.Cmd):
           self.idf[word] = math.log(numDocs/(idf[word]),2)
           #self.idf[word] = math.log(numDocs/len(self.idfList[word]),2)
 
-        print self.idf['mars']
+        #print self.idf['mars']
         for doc in self.termFreq:
           sumNorm=0
           for word in self.termFreq[doc]:
@@ -162,12 +164,13 @@ class HelloWorld(cmd.Cmd):
           self.outOf_links[item] = outOf[item]
 
         self.allUsers_set.update(allUsers)
-        self.do_pageRank(self)
-        self.do_tsa(self)
 
-    def do_queryWithTFIDFandPageRank(self,aohudskvhfcjfjh):
+        print "Calculating page rank....... "
+        self.do_part2(self)
+
+    def do_part3(self,aohudskvhfcjfjh):
         """
-        Enter a query to search using tf-idf and then apply pageRank to influence the result. Run PageRank command before running this command
+        Enter a query to search using tf-idf and then apply pageRank to influence the result. Run Parsefile command before running this command
         """
         q=raw_input("Enter a query: ")
 
@@ -175,9 +178,13 @@ class HelloWorld(cmd.Cmd):
 
         queryText = re.split('[\W]+',q,flags=re.UNICODE)
         #print queryText
+        idfkeys = self.idf.keys()
         queryTermFreq = defaultdict()
         for word in queryText:
           word = word.lower()
+          if word not in idfkeys:
+            print "query word ",word," is not found in the tweet corpus"
+            return
           if word in queryTermFreq:
             queryTermFreq[word] = queryTermFreq[word]+1.0
           else:
@@ -194,7 +201,7 @@ class HelloWorld(cmd.Cmd):
         for word in queryWeight:
           queryWeight[word]= queryWeight[word]/math.sqrt(sumNorm)
 
-        print queryWeight
+        #print queryWeight
         resultSet = defaultdict()
         for doc in self.tfIdfWeight:
           value=0
@@ -230,17 +237,17 @@ class HelloWorld(cmd.Cmd):
         for user in deletedUsers:
           mypageRank[user] = 0.0
 
-        print "lenth of PR : ",len(mypageRank) , len(self.pageRankUsers) 
+        #print "lenth of PR : ",len(mypageRank) , len(self.pageRankUsers) 
         myresultSet = defaultdict()
         for doc in resultSet:
           myresultSet[doc] = (resultSet[doc]-minValTFIDF)/(maxValTFIDF-minValTFIDF)     # normalize TF-IDF values
  
         prKeys = mypageRank.keys()
-        for alpha in [0.2, 0.4, 0.6, 0.8]:
+        for alpha in [0.8
           myresultSet1 = defaultdict()
           myresultSet1 = myresultSet 
           #alpha = 0.3
-          print "printing with alpha: ", alpha
+          print "printing with formula: [alpha*tweetResults + (1-alpha)*pagerank ] with alpha as ", alpha
          
            #actual technique of merging pagerank score of user to his tweet
           for doc in resultSet:
@@ -250,25 +257,17 @@ class HelloWorld(cmd.Cmd):
             myresultSet1[doc] = (alpha)*myresultSet[doc] + (1.0-alpha)*mypageRank[userid]
             #else:
             #  myresultSet[doc] = 0.0
-          print "out of loop"
+          #print "out of loop"
           results=[(key,val) for key, val in sorted(myresultSet1.iteritems(), key=lambda (k,v): (v,k))]
-          print len(results),"Results found"
+          #print len(results),"Results found"
           finalResultsSorted=results[-50:]
           finalResultsSorted.reverse()
           #print finalResultsSorted
           L = len(finalResultsSorted)
           for key in range(0,L):
-            print (finalResultsSorted[key][0],self.actualTweets[finalResultsSorted[key][0]],finalResultsSorted[key][1])
-   
-  
-  
-   
-   
-          
+            print "tweetID: ",finalResultsSorted[key][0],"Tweet: ",self.actualTweets[finalResultsSorted[key][0]]," User: ",self.UIDtoScreenName[self.whoTweeted[finalResultsSorted[key][0]]]
 
-
-
-    def do_tsa(self, aonfeiutioruntef):
+    def do_part5_bonus(self, aonfeiutioruntef):
       """
       To perform a topic sensitive pagerank on the topics mentioned in the program
       """
@@ -314,7 +313,7 @@ class HelloWorld(cmd.Cmd):
         topicUsers[topic].add(user)
         topicUsers[topic].update(set(into[user]) | set(outOf[user]) )
        
-      
+      print "Displaying top 10 page rank users for individual topics: "
       for  topic in topics:
         #### Page rank algorithm
        
@@ -388,26 +387,12 @@ class HelloWorld(cmd.Cmd):
         #print finalResultsSorted
         print "num iter: ",iterEle
         for key in range(0,len(finalResultsSorted)):
-          print (finalResultsSorted[key][0],self.UIDtoScreenName[finalResultsSorted[key][0]],finalResultsSorted[key][1])
+          print "User id: ",finalResultsSorted[key][0],"user name: ",self.UIDtoScreenName[finalResultsSorted[key][0]],"page rank: ",finalResultsSorted[key][1]
 
 
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-    def do_queryWithTFIDF(self,lineadfsggh):
+    def do_part1(self,lineadfsggh):
         """
-        Enter a query to search using tf-idf technique
+        Enter a query to search using tf-idf and finding the cosine 
         """
         q=raw_input("Enter a query: ")
 
@@ -415,8 +400,12 @@ class HelloWorld(cmd.Cmd):
 
         queryText = re.split('[\W]+',q,flags=re.UNICODE)
         #print queryText
+        idfkeys = self.idf.keys()
         queryTermFreq = defaultdict()
         for word in queryText:
+          if word not in idfkeys:
+            print "query word ",word," is not found in the tweet corpus"
+            return
           word = word.lower()
           if word in queryTermFreq:
             queryTermFreq[word] = queryTermFreq[word]+1.0
@@ -448,22 +437,24 @@ class HelloWorld(cmd.Cmd):
           #print (doc,value)
 
         sumToNorm = sum(resultSet.values())
-        print "sumToNorm: ", sumToNorm
+        #print "sumToNorm: ", sumToNorm
       
         for user in resultSet:
           resultSet[user] = resultSet[user]/sumToNorm
 
        
         results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
-        print len(results),"Results found"
+        #print len(results),"Results found"
         finalResultsSorted=results[-50:]
         finalResultsSorted.reverse()
         #print finalResultsSorted
         for key in range(0,len(finalResultsSorted)):
-          print (finalResultsSorted[key][0],self.actualTweets[finalResultsSorted[key][0]],finalResultsSorted[key][1])
+          print "TweetID: ",finalResultsSorted[key][0],"Tweet: ",self.actualTweets[finalResultsSorted[key][0]]," User: ",self.UIDtoScreenName[self.whoTweeted[finalResultsSorted[key][0]]]
 
 
-    def do_pageRank(self,qwertrgrvm):
+
+
+    def do_part2(self,qwertrgrvm):
       """
       Performs a page ranking on the users [run the parseFile command before running this command]     
       """
@@ -474,7 +465,6 @@ class HelloWorld(cmd.Cmd):
       
       #### Page rank algorithm
 
-      print len(into)
       print len(self.UIDtoScreenName)
 
       properUsers = set((set(outOf.keys())|set(into.keys())))
@@ -527,18 +517,18 @@ class HelloWorld(cmd.Cmd):
         #print "sumToNorm: ", sumToNorm
 
       # sort PR and print
-      print "out of the loop\n"
+      #print "out of the loop\n"
   
       sumToNorm=0.0
 
       sumToNorm = sum(newUserToPR.values())
-      print "sumToNorm: ", sumToNorm
+      #print "sumToNorm: ", sumToNorm
       
       for user in newUserToPR:
         newUserToPR[user] = newUserToPR[user]/sumToNorm
 
       sortedUsersByPR=[(key,val) for key, val in sorted(newUserToPR.iteritems(), key=lambda (k,v): (v,k))]
-      print len(sortedUsersByPR),"Length of sorted users after PR"
+      #print len(sortedUsersByPR),"Length of sorted users after PR"
       finalResultsSorted=sortedUsersByPR[-50:]
       L = len(sortedUsersByPR)
       for i in range(0,L):
@@ -549,14 +539,10 @@ class HelloWorld(cmd.Cmd):
       #print finalResultsSorted
       print "num iter: ",iterEle
       for key in range(0,len(finalResultsSorted)):
-        print (finalResultsSorted[key][0],self.UIDtoScreenName[finalResultsSorted[key][0]],finalResultsSorted[key][1])
-
-      #for item in finalResultsSorted:
-       # print (self.UIDtoScreenName[finalResultsSorted[item][0]] , finalResultsSorted[item][1])
-
+        print "userID: ",finalResultsSorted[key][0],"user name:",self.UIDtoScreenName[finalResultsSorted[key][0]],"page Rank: ",finalResultsSorted[key][1]
       
     def default(self,line):
-        print "enter a valid command\n"
+        print "enter a valid command\ntype help to see the list of commands. type help <command> to view the documentation of that command"
     
     def postloop(self):
         print
