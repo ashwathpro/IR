@@ -25,40 +25,59 @@ class HelloWorld(cmd.Cmd):
     topics = set()
     
     
-    def do_callBingAPI(self,arbitarg):
-        r = requests.get('https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27bing%20is%20good%27&$format=json&$skip=0')
+    def bingRequest(self,req,query, fileMode ):
+        r = requests.get(req + '$skip=0')
         json_data=json.loads(r.text)
         rawResultsList = json_data['d']['results']
 
-        fw = open("bingOP.txt", 'w')
+        fw = open("bing_all_OP.txt", fileMode)
+        queryFile = open("bing_OP_"+query, 'w')
         for result in rawResultsList:
           resultText = result['Title']+" "+result['Description']
+          queryResultText = result['Title']+" === "+result['Description']
+          queryFile.write(queryResultText.encode('utf8'))
+          queryFile.write('\n')
           fw.write(resultText.encode('utf8'))
           fw.write("\n")
-        r = requests.get('https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27bing%20is%20good%27&$format=json&$skip=15')
+        r = requests.get(req + '$skip=15')
         json_data=json.loads(r.text)
         rawResultsList = json_data['d']['results']
         for result in rawResultsList:
           resultText = result['Title']+" "+result['Description']
+          queryResultText = result['Title']+" === "+result['Description']
+          queryFile.write(queryResultText.encode('utf8'))
+          queryFile.write('\n')
           fw.write(resultText.encode('utf8'))
           fw.write("\n")
         fw.close()
+        queryFile.close()
 
+    def do_callBingAPI(self, arbit):
+        request1 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27texas%20aggies%27&$format=json&'
+        request2 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27texas%20longhorns%27&$format=json&'
+        request3 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27duke%20blue%20devils%27&$format=json&'
+        request4 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27dallas%20cowboys%27&$format=json&'
+        request5 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27dallas%20mavericks%27&$format=json&'
+        query1 = "texas aggies"
+        query2 = "texas longhorns"
+        query3 = "duke blue devils"
+        query4 = "dallas cowboys"
+        query5 = "dallas mavericks"
+
+        self.bingRequest(request1,query1, 'w');
+        self.bingRequest(request2,query2, 'a');
+        self.bingRequest(request3,query3, 'a');
+        self.bingRequest(request4,query4, 'a');
+        self.bingRequest(request5,query5, 'a');
 
 
     def do_myTests(self,ter):
         filename= "bingOP.txt"
         fr = open(filename)
-        lines = fr.readlines()
-        numDocs=float(len(lines))
-        for line in lines:
-          json_data=json.loads(line)
-          rawResultsList = json_data['d']['results']
-          for item in rawResultsList:
-            print item['Title']
-            print item['Description']
-
-
+        request5 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27dallas%20mavericks%27&$format=json&'
+        query5 = "dallas mavericks"
+        self.bingRequest(request1,query5, 'a');
+       
 
 
     def do_EOF(self,line):
