@@ -243,7 +243,7 @@ class HelloWorld(cmd.Cmd):
           myresultSet[doc] = (resultSet[doc]-minValTFIDF)/(maxValTFIDF-minValTFIDF)     # normalize TF-IDF values
  
         prKeys = mypageRank.keys()
-        for alpha in [0.8
+        for alpha in [0.8]:
           myresultSet1 = defaultdict()
           myresultSet1 = myresultSet 
           #alpha = 0.3

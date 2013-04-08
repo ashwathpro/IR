@@ -5,7 +5,7 @@ Note: Algorithm is explained below these steps. At any point of time, type help 
 0) First run "parseFile" command. This will automatically call another command to calculate the PageRank for all the users. Result of part2 will be displayed in the first step itself. Takes roughly 30-45 seconds or so.
 1) part1: run the "part1" command. Enter any query to search using cosine similarity using TF-IDF values
 2) part2: part2 or pagerank results are displayed in step 1.
-3) part3: run the "part1" command. Enter any query to search using cosine similarity using TF-IDF values and the user's pagerank (of who tweeted the tweet)
+3) part3: run the "part3" command. Enter any query to search using cosine similarity using TF-IDF values and the user's pagerank (of who tweeted the tweet)
 4) bonus: run the "part5_bonus" command. Enter any query to find the topic sensitive pageranks
 5) type EOF to exit the prompt
 
