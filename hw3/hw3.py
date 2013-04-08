@@ -237,6 +237,8 @@ class HelloWorld(cmd.Cmd):
           allClustersList.append(allClusters[centroid])
 
         #print allClustersList
+        
+
 
 
         while math.fabs( RSSprev - RSS ) > 0.01:
@@ -275,41 +277,67 @@ class HelloWorld(cmd.Cmd):
           #print allClusterCentroids[0]
           
           # calculate the new RSS and then perform the new clustering based on the new centroids 
-          newAllClustersList = [[]]*K   # this will store all the new clusters ... Data structure is similar to allClustersList
+          newAllClustersList = [[] for i in range(3)]  # this will store all the new clusters ... Data structure is similar to allClustersList
+          #print newAllClustersList
+          newClusterCentroids = []
           newClusterCentroids = [item for item in allClusterCentroids]
           
           #print "length of newClusterCentroids: " , newClusterCentroids
           RSS=0
           # calculate the initial clusters with the initial Centroids
+          #print "allDocuments size: ", len(allDocuments)
           for doc in allDocuments:
             minVal=0 
-            closestCentroidIndex = int()
+            closestCentroidIndex = 0
             for i in range(0,len(newClusterCentroids)):
               centroid = newClusterCentroids[i]
               #if centroid == doc: 
               #  continue
               val = self.findDistance(doc, centroid) 
-              #print val
+              #print 
+              #print "val: ",val
               if val > minVal:
                 minVal = val
+                #print "minVal: ",minVal
                 closestCentroidIndex = i
                 RSS = RSS + val
-              #print closestCentroidIndex
+              #print "closest index: ",closestCentroidIndex
+            #print "final closest index: ",closestCentroidIndex
+            #print "newAllClustersList: ",newAllClustersList[closestCentroidIndex]
             newAllClustersList[closestCentroidIndex].append(doc)
+            """
+            tmpList.append(doc)
+            newAllClustersList[closestCentroidIndex] = tmpList
+
+            for listnum in range(0,len(newAllClustersList)):
+              if listnum == closestCentroidIndex:
+            """
+            #print newAllClustersList
+            #x = input("press to continue")
           #print newAllClustersList
           
           print "RSS new: " , RSS, "RSS old : ", RSSprev
+          print "clusters size: ", len(newAllClustersList[0]), " , ", len(newAllClustersList[1])," , ", len(newAllClustersList[2])
+          allClustersList = []
+          for item in newAllClustersList:
+            tmpList = []
+            for ele in item: 
+              tmpList.append(ele)
+            allClustersList.append(tmpList)
+          #allClustersList = newAllClustersList
 
         # printing all the clusters here
+        #"""
         for i in range(0,len(newAllClustersList)):
           cluster = newAllClustersList[i]
           print "\n\n\ncluster ", i , " : number of documents in this cluster: " ,len(cluster) 
           for ID in cluster:
             text = re.split(' === ', self.actualTweets[ID], flags = re.UNICODE)
             print text[0]
+        #"""
 
 
-
+        
 
 
 
