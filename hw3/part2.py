@@ -14,6 +14,7 @@ class HelloWorld(cmd.Cmd):
     actualTweets = defaultdict()  # {tweetID : tweet text}
     whoTweeted = defaultdict()    # {tweetID : userID  }
     termFreq = defaultdict(lambda:defaultdict()) # {word : {1:2 }}
+    TF  = defaultdict(lambda:defaultdict()) # {class: {word:count }} 
     idfList = defaultdict(set)
     idf = defaultdict()
     UIDtoScreenName = defaultdict()     # {ID: screen_name}
@@ -25,12 +26,14 @@ class HelloWorld(cmd.Cmd):
     topics = set()
     assignedClass = defaultdict()   # { docID , query }
     assignedCluster = defaultdict()   # { docID , query }
-    query1 = ""
-    query2 = ""
-    query3 = ""
-    query4 = ""
-    query5 = ""
- 
+    allQueries = []
+    allClasses = []
+    dict_words=defaultdict(defaultdict)   # { word:  {category:count  }  }
+    vocabulary=set()                      # unique count of words
+    words_category=defaultdict()          # { category: words  }
+    category_size=defaultdict()           # { category: numDocs  }
+    numDocs  = float()  # total number of documents for training set
+
     def do_myTests(self,ter):
         filename= "bingOP.txt"
         fr = open(filename)
@@ -57,50 +60,27 @@ class HelloWorld(cmd.Cmd):
         #print self.pageRankUsers['16692597']
         #print mypageRank['16692597']
 
-    def do_intermediateTest(self,apfoitjhmno):
-        fr = open("bing_all_OP.txt", 'r')
-        fw = open("bing_all_OP1.txt", 'w')
-        lines = fr.readlines()
-        count = 1
-        for line in lines: 
-          if count <=30:
-            line = line + " === " + self.query1
-          elif count >30 and count <=60:
-            line = line + " === " + self.query2
-          elif count >60 and count <=90:
-            line = line + " === " + self.query3
-          elif count >90 and count <=120:
-            line = line + " === " + self.query4
-          elif count >120 and count <=150:
-            line = line + " === " + self.query5
-          count +=1
-          fw.write(line)
-          fw.write('\n')
-
-        fw.close()
-        fr.close()
-
-   
-    def bingRequest(self,req,query, fileMode ):
-        r = requests.get(req + '$skip=0')
+    def bingRequest(self,req,query,category, fileMode ):
+        r = requests.get(req + '&$skip=0')
         json_data=json.loads(r.text)
         rawResultsList = json_data['d']['results']
 
-        fw = open("bing_all_OP.txt", fileMode)
+        fw = open("bing_all_OP_classifyTest.txt", fileMode)
+        #every file contains IR === title === description === query === category
         queryFile = open("bing_OP_"+query, 'w')
         for result in rawResultsList:
-          resultText = result['ID']+" === "+result['Title']+" === "+result['Description']
-          queryResultText = result['ID']+" === "+result['Title']+" === "+result['Description']
+          resultText = result['ID']+" === "+result['Title']+" === "+result['Description'] + " === "+query + " === "+category
+          queryResultText = result['ID']+" === "+result['Title']+" === "+result['Description'] + " === "+query + " === "+category
           queryFile.write(queryResultText.encode('utf8'))
           queryFile.write('\n')
           fw.write(resultText.encode('utf8'))
           fw.write("\n")
-        r = requests.get(req + '$skip=15')
+        r = requests.get(req + '&$skip=15')
         json_data=json.loads(r.text)
         rawResultsList = json_data['d']['results']
         for result in rawResultsList:
-          resultText =result['ID']+" === "+ result['Title']+" === "+result['Description']
-          queryResultText = result['ID']+" === "+result['Title']+" === "+result['Description']
+          resultText =result['ID']+" === "+ result['Title']+" === "+result['Description']+ " === "+query + " === "+category
+          queryResultText = result['ID']+" === "+result['Title']+" === "+result['Description']+ " === "+query + " === "+category
           queryFile.write(queryResultText.encode('utf8'))
           queryFile.write('\n')
           fw.write(resultText.encode('utf8'))
@@ -109,67 +89,66 @@ class HelloWorld(cmd.Cmd):
         queryFile.close()
 
     def do_callBingAPI(self, arbit):
-        request1 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27texas%20aggies%27&$format=json&'
-        request2 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27texas%20longhorns%27&$format=json&'
-        request3 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27duke%20blue%20devils%27&$format=json&'
-        request4 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27dallas%20cowboys%27&$format=json&'
-        request5 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27dallas%20mavericks%27&$format=json&'
-        self.query1 = "texas aggies"
-        self.query2 = "texas longhorns"
-        self.query3 = "duke blue devils"
-        self.query4 = "dallas cowboys"
-        self.query5 = "dallas mavericks"
+        request = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27'
+        app = '%27&$format=json'
+        query = [ 'apple', 'facebook', 'westeros', 'gonzaga', 'banana']
+        classes = ['entertainment', 'business', 'politics']
+        self.allQueries = query
+        self.allClasses = classes
+        for i in range(0,len(classes)):
+          for q in query:
+            if i==0:
+              self.bingRequest( request + q+ app + "&NewsCategory=%27rt_Entertainment%27", q ,classes[i] , 'a' )
+            elif i==1:
+              self.bingRequest( request + q+ app + "&NewsCategory=%27rt_Business%27", q ,classes[i] , 'a' )
+            elif i==2:
+              self.bingRequest( request + q+ app + "&NewsCategory=%27rt_Politics%27", q ,classes[i] , 'a' )
 
-        self.bingRequest(request1, self.query1, 'w');
-        self.bingRequest(request2, self.query2, 'a');
-        self.bingRequest(request3, self.query3, 'a');
-        self.bingRequest(request4, self.query4, 'a');
-        self.bingRequest(request5, self.query5, 'a');
+
 
 
             
-    def do_parseFile(self,asdfrtg):
+    
+    def do_trainSystem(self, classes):
         """
         Parse the entire tweet corpus for tf-idf and for pagerank [Run this command first before running any other command]
         """
-        self.query1 = "texas aggies"
-        self.query2 = "texas longhorns"
-        self.query3 = "duke blue devils"
-        self.query4 = "dallas cowboys"
-        self.query5 = "dallas mavericks"
+        print "Training system.. please wait.."
 
-
-        print "Parsing file.. please wait.."
-        fr=open('bing_all_OP.txt','r')
+        dict_words=defaultdict(defaultdict)   # { word:  {category:count  }  }
+        vocabulary=set()                      
+        words_category=defaultdict()          # { category: words  }
+        category_size=defaultdict()           # { category: numDocs  }
+        fr=open('bing_all_OP_classify.txt','r')
         lines = fr.readlines()
         numDocs=float(len(lines))
-        into = defaultdict(set) # {word : {1:2 }}
-        outOf = defaultdict(set) # {word : {1:2 }}
-        allUsers = set()
-        #retweetCount = defaultdict() # {tweetID : num of retweets}
-        idf = defaultdict()
-
-        #numDocs = 4.0
-        for line in lines:
-        #for i in range(0,4):
-          #json_data=json.loads(line)
+        for line in lines: 
           json_data = re.split(' === |\n', line, flags = re.UNICODE)
-          rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]
+          rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]+ " === " + json_data[4]
+          category = json_data[4]
+          titleAndDesc = json_data[1]+json_data[2]
+          words = re.split('[\W]+',titleAndDesc,flags=re.UNICODE)
+          for word in words:
+            if category in dict_words[word]:
+              dict_words[word][category]=dict_words[word][category]+1
+            else:
+              dict_words[word][category]=1
+            if category in words_category:
+              words_category[category]=words_category[category]+1
+            else:
+              words_category[category]=1
+              vocabulary.add(word)
+          if category not in category_size:
+            category_size[category]=1
+          else:
+            category_size[category]=category_size[category]+1
+
 
           tweetID = json_data[0]
           #print "for assigned class: ",json_data[0] , " , " ,json_data[3]
-          self.assignedClass[json_data[0]] = json_data[3]
+          self.assignedClass[json_data[0]] = json_data[4]
           #print "raw tweetText: " , rawTweetText
           #print "tweetID: ", tweetID
-
-          """
-          tweetID = json_data['id']
-          userScreenName = json_data['user']['screen_name']
-          retweetCount = json_data['retweet_count']
-          numDocs += retweetCount 
-          self.UIDtoScreenName[userID] = userScreenName
-          self.whoTweeted[tweetID] = userID
-          """
 
           tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
           #mentions = json_data['entities']['user_mentions']
@@ -177,50 +156,64 @@ class HelloWorld(cmd.Cmd):
           #allUsers.add(userID)
           self.actualTweets[tweetID] =rawTweetText 
           words = tweetText
-          docTermFreq = defaultdict()
-          for word in words:
-            word = word.lower()
-            self.idfList[word].add(tweetID)
-            # """
-            if word in idf:
-              idf[word] = idf[word]+1
-            else:
-              idf[word] = 1
-            # """
-            if word in docTermFreq:
-              docTermFreq[word] = docTermFreq[word]+1
-            else:
-              docTermFreq[word] = 1
-          
-          self.termFreq[tweetID]=docTermFreq
-          #print "term frequency of ", tweetID, " is : ",self.termFreq[tweetID]
-        #print len(self.idf)
-        for word in self.idfList:
-          self.idf[word] = math.log(numDocs/(idf[word]),2)
-          self.idf[word] = math.log(numDocs/len(self.idfList[word]),2)
-          if self.idf[word] < 0:
-            print "idf: ", self.idf[word], word , " " , idf[word]
-
-        #print self.idf['mars']
-        for doc in self.termFreq:
-          sumNorm=0
-          for word in self.termFreq[doc]:
-            if self.termFreq[doc][word] > 0:
-              self.termFreq[doc][word] = 1 + math.log(self.termFreq[doc][word] ,2)
-            else:
-              self.termFreq[doc][word] = 0
-            self.tfIdfWeight[doc][word] = self.termFreq[doc][word]*self.idf[word]
-            sumNorm = sumNorm + self.tfIdfWeight[doc][word]*self.tfIdfWeight[doc][word] 
-          for word in self.tfIdfWeight[doc]:
-            self.tfIdfWeight[doc][word] =  self.tfIdfWeight[doc][word]/math.sqrt(sumNorm) 
-
         fr.close()
         #fw.close()
-        #print self.tfIdfWeight
+        self.dict_words=dict_words
+        self.vocabulary=vocabulary
+        self.words_category=words_category
+        self.category_size = category_size
+        self.numDocs = numDocs
         """
         print "Calculating page rank....... "
         self.do_part2(self)
         """
+
+
+    def do_classification(self, paoijnfrioune):
+          
+        print "performing classification"
+        # P(C) = category_size[C] / numDocs
+        fr=open('bing_all_OP_classifyTest.txt','r')
+        #print self.dict_words
+
+        lines = fr.readlines()
+        numDocs=float(len(lines))
+        for line in lines: 
+          json_data = re.split(' === |\n', line, flags = re.UNICODE)
+          rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]+ " === " + json_data[4]
+          category = json_data[4]
+          titleAndDesc = json_data[1]+json_data[2]
+          words = re.split('[\W]+',titleAndDesc,flags=re.UNICODE)
+          #print words
+          score = defaultdict()
+          maxScore =-100000
+          finalCategory = ""
+          #print self.words_category.keys()
+          for category in self.words_category:
+            if category not in score:
+              score[category] = math.log( self.category_size[category]/self.numDocs , 2 )
+            #print "score of category : ",score[category]
+            for word in words:
+              if category in score:
+                if category in self.dict_words[word]:
+                  score[category] += math.log( self.dict_words[word][category] , 2)
+                else:
+                  # add 1 smoothing for words that are not in the classifiction
+                  score[category] += math.log( 1.0/( self.category_size[category]+len(self.vocabulary) ) ,2 )
+              if score[category] > maxScore:
+                maxScore = score[category]
+                finalCategory = category
+          print "max score : ", maxScore , " final category : ", finalCategory
+
+
+
+
+
+
+
+
+        fr.close()
+
 
     def findDistance(self, ptA , cent):
           """
