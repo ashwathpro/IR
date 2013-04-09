@@ -210,10 +210,16 @@ class HelloWorld(cmd.Cmd):
               if score[category] > maxScore:
                 maxScore = score[category]
                 finalCategory = category
-          print "max score : ", maxScore , " final category : ", finalCategory
+          if finalCategory in docsInCategory:
+            docsInCategory[finalCategory].append(json_data[4] +" : "+json_data[1])
+          else:
+            docsInCategory[finalCategory] = [ json_data[4]+" : "+json_data[1] ]
+          #print "max score : ", maxScore , " final category : ", finalCategory
           assignedClass[tweetID] = finalCategory
-          #docsInCategory[category].append(tweetID)
-        #print docsInCategory['politics']
+        for category in self.words_category:
+          print "\n\n\n******************************************************** class: ", category, "  ************************************************\n"
+          for item in docsInCategory[category]:
+            print item
 
         print "calculating the F measure : "
 
@@ -240,7 +246,7 @@ class HelloWorld(cmd.Cmd):
         TP_total = sum([ TP[category] for category in self.words_category ])
         FP_total = sum([ FP[category] for category in self.words_category ])
         FN_total = sum([ FN[category] for category in self.words_category ])
-        TN_total = numDocs - (TN_total + FP_total + FN_total)
+        TN_total = 3*numDocs - (TP_total + FP_total + FN_total)
 
         print "TP for each category: ",[ TP[category] for category in self.words_category ]
         print "FP for each category: ",[ FP[category] for category in self.words_category ]
