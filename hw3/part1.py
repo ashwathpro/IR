@@ -244,11 +244,13 @@ class HelloWorld(cmd.Cmd):
         for k in range(5,6):
           print "***********************  Running k-means for k = ", k ,"***************************"
           maxPurity = 0
+          maxRI = 0
           for i in range(0,10):
-            val = self.kMeans(k)
+            (val,RI) = self.kMeans(k)
             if val > maxPurity:
               maxPurity = val
-          print "purity = ", maxPurity
+              maxRI = RI
+          print "\n\n \n For K = ",k,", Max purity = ", maxPurity, ", RI : ", maxRI
 
 
     def kMeans(self,K):
@@ -378,12 +380,13 @@ class HelloWorld(cmd.Cmd):
         print "====================================  Calculating Purity: ======================================="
         
         purity = 0
-        for cluster in newAllClustersList:
+        for i in range(0,len(newAllClustersList)):
+          cluster = newAllClustersList[i]
           purityScale = defaultdict()
           for item in cluster:
             text = re.split(' === |\n', self.actualTweets[item], flags = re.UNICODE)
             word = text[2]
-            self.assignedCluster[item] = word
+            self.assignedCluster[item] = i
             if word in purityScale:
               purityScale[word] += 1
             else:
@@ -408,26 +411,26 @@ class HelloWorld(cmd.Cmd):
 
         for doc1 in allDocuments:
           for doc2 in allDocuments:
+            #print "d1 class: ",self.assignedClass[doc1] , " d2 class: ",self.assignedClass[doc2] 
+            #print "d1 cluster: ",self.assignedCluster[doc1] , " d2 cluster: ",self.assignedCluster[doc2] 
+
             if self.assignedClass[doc1] == self.assignedClass[doc2]:
               if self.assignedCluster[doc1] == self.assignedCluster[doc2]:
                 TP +=1
               else:
                 FN +=1
-            if self.assignedClass[doc1] != self.assignedClass[doc2] :
+            elif self.assignedClass[doc1] != self.assignedClass[doc2] :
               if self.assignedCluster[doc1] == self.assignedCluster[doc2]:
                 FP +=1
               else:
                 TN +=1
+            #y = input("enter")
 
         print "TP: ", TP , ' TN: ', TN, ' FP: ', FP, ' FN: ', FN
-        RI = (TP+TN)/(TP+TN+FP+FN)
-
-        
+        RI = (TP+TN)/float(TP+TN+FP+FN)
         print "purity percent: ",purityPercent, "% , RI: ", RI," RSS: ", RSS, " number of iterations to converge: ", numIterations
-
         
-        
-        return purityPercent
+        return (purityPercent, RI)
 
 
 

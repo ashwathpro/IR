@@ -175,13 +175,20 @@ class HelloWorld(cmd.Cmd):
         # P(C) = category_size[C] / numDocs
         fr=open('bing_all_OP_classifyTest.txt','r')
         #print self.dict_words
+        baseTruth = defaultdict()   # { docID : actual category }
+        assignedClass = defaultdict() # { docID : assigned category }
+
+
 
         lines = fr.readlines()
+        docsInCategory = defaultdict(list)
         numDocs=float(len(lines))
         for line in lines: 
           json_data = re.split(' === |\n', line, flags = re.UNICODE)
           rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]+ " === " + json_data[4]
           category = json_data[4]
+          tweetID = json_data[0]
+          baseTruth[tweetID] = category
           titleAndDesc = json_data[1]+json_data[2]
           words = re.split('[\W]+',titleAndDesc,flags=re.UNICODE)
           #print words
@@ -204,6 +211,42 @@ class HelloWorld(cmd.Cmd):
                 maxScore = score[category]
                 finalCategory = category
           print "max score : ", maxScore , " final category : ", finalCategory
+          assignedClass[tweetID] = finalCategory
+          #docsInCategory[category].append(tweetID)
+        #print docsInCategory['politics']
+
+        print "calculating the F measure : "
+
+        P = 0
+        R = 0
+        TP = defaultdict() 
+        FP = defaultdict()
+        FN = defaultdict()
+
+        for category in self.words_category:
+          TP[category] = 0
+          FP[category] = 0
+          FN[category] = 0
+        for ID in assignedClass:
+          if baseTruth[ID] == assignedClass[ID]:
+            TP[ baseTruth[ID]  ] +=1
+          else:
+            FP [ assignedClass[ID]  ] +=1
+            FN [ baseTruth[ID]  ] +=1
+        TP_total = sum([ TP[category] for category in self.words_category ])
+        FP_total = sum([ FP[category] for category in self.words_category ])
+        FN_total = sum([ FN[category] for category in self.words_category ])
+
+        print "TP: ", TP_total," FP: " , FP_total ," FN: ", FN_total
+
+        P = TP_total/float(TP_total + FP_total)
+        R = TP_total/float(TP_total + FN_total)
+        Fscore = float (2 / float ( (( 1/float(P) )+ ( 1/float(R) ) )))
+        print "F measure: ",Fscore
+
+
+
+
 
 
 
