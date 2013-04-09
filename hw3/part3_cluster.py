@@ -14,7 +14,6 @@ class HelloWorld(cmd.Cmd):
     actualTweets = defaultdict()  # {tweetID : tweet text}
     whoTweeted = defaultdict()    # {tweetID : userID  }
     termFreq = defaultdict(lambda:defaultdict()) # {word : {1:2 }}
-    TF  = defaultdict(lambda:defaultdict()) # {class: {word:count }} 
     idfList = defaultdict(set)
     idf = defaultdict()
     UIDtoScreenName = defaultdict()     # {ID: screen_name}
@@ -26,14 +25,13 @@ class HelloWorld(cmd.Cmd):
     topics = set()
     assignedClass = defaultdict()   # { docID , query }
     assignedCluster = defaultdict()   # { docID , query }
-    allQueries = []
-    allClasses = []
-    dict_words=defaultdict(defaultdict)   # { word:  {category:count  }  }
-    vocabulary=set()                      # unique count of words
-    words_category=defaultdict()          # { category: words  }
-    category_size=defaultdict()           # { category: numDocs  }
-    numDocs  = float()  # total number of documents for training set
-
+    initCentroids = list()    # list of the random initial centroids
+    query1 = ""
+    query2 = ""
+    query3 = ""
+    query4 = ""
+    query5 = ""
+ 
     def do_myTests(self,ter):
         filename= "bingOP.txt"
         fr = open(filename)
@@ -48,7 +46,7 @@ class HelloWorld(cmd.Cmd):
         testList=[(1,2),(3,4),(5,6)]
         asd = [1]*6
         #print sum(asd)
-        qwe = [1.0]*6
+        qwe = [1.0]*64
         #for i in range(0,6):
           #print qwe[i]
         #print [i-j for i,j in zip(asd ,qwe)]
@@ -60,27 +58,50 @@ class HelloWorld(cmd.Cmd):
         #print self.pageRankUsers['16692597']
         #print mypageRank['16692597']
 
-    def bingRequest(self,req,query,category, fileMode ):
-        r = requests.get(req + '&$skip=0')
+    def do_intermediateTest(self,apfoitjhmno):
+        fr = open("bing_all_OP.txt", 'r')
+        fw = open("bing_all_OP1.txt", 'w')
+        lines = fr.readlines()
+        count = 1
+        for line in lines: 
+          if count <=30:
+            line = line + " === " + self.query1
+          elif count >30 and count <=60:
+            line = line + " === " + self.query2
+          elif count >60 and count <=90:
+            line = line + " === " + self.query3
+          elif count >90 and count <=120:
+            line = line + " === " + self.query4
+          elif count >120 and count <=150:
+            line = line + " === " + self.query5
+          count +=1
+          fw.write(line)
+          fw.write('\n')
+
+        fw.close()
+        fr.close()
+
+   
+    def bingRequest(self,req,query, fileMode ):
+        r = requests.get(req + '$skip=0')
         json_data=json.loads(r.text)
         rawResultsList = json_data['d']['results']
 
-        fw = open("bing_all_OP_classifyTest.txt", fileMode)
-        #every file contains IR === title === description === query === category
+        fw = open("bing_all_OP.txt", fileMode)
         queryFile = open("bing_OP_"+query, 'w')
         for result in rawResultsList:
-          resultText = result['ID']+" === "+result['Title']+" === "+result['Description'] + " === "+query + " === "+category
-          queryResultText = result['ID']+" === "+result['Title']+" === "+result['Description'] + " === "+query + " === "+category
+          resultText = result['ID']+" === "+result['Title']+" === "+result['Description']
+          queryResultText = result['ID']+" === "+result['Title']+" === "+result['Description']
           queryFile.write(queryResultText.encode('utf8'))
           queryFile.write('\n')
           fw.write(resultText.encode('utf8'))
           fw.write("\n")
-        r = requests.get(req + '&$skip=15')
+        r = requests.get(req + '$skip=15')
         json_data=json.loads(r.text)
         rawResultsList = json_data['d']['results']
         for result in rawResultsList:
-          resultText =result['ID']+" === "+ result['Title']+" === "+result['Description']+ " === "+query + " === "+category
-          queryResultText = result['ID']+" === "+result['Title']+" === "+result['Description']+ " === "+query + " === "+category
+          resultText =result['ID']+" === "+ result['Title']+" === "+result['Description']
+          queryResultText = result['ID']+" === "+result['Title']+" === "+result['Description']
           queryFile.write(queryResultText.encode('utf8'))
           queryFile.write('\n')
           fw.write(resultText.encode('utf8'))
@@ -89,80 +110,74 @@ class HelloWorld(cmd.Cmd):
         queryFile.close()
 
     def do_callBingAPI(self, arbit):
-        request = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27'
-        app = '%27&$format=json'
-        query = [ 'apple', 'facebook', 'westeros', 'gonzaga', 'banana']
-        classes = ['entertainment', 'business', 'politics']
-        self.allQueries = query
-        self.allClasses = classes
-        for i in range(0,len(classes)):
-          for q in query:
-            if i==0:
-              self.bingRequest( request + q+ app + "&NewsCategory=%27rt_Entertainment%27", q ,classes[i] , 'a' )
-            elif i==1:
-              self.bingRequest( request + q+ app + "&NewsCategory=%27rt_Business%27", q ,classes[i] , 'a' )
-            elif i==2:
-              self.bingRequest( request + q+ app + "&NewsCategory=%27rt_Politics%27", q ,classes[i] , 'a' )
+        request1 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27texas%20aggies%27&$format=json&'
+        request2 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27texas%20longhorns%27&$format=json&'
+        request3 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27duke%20blue%20devils%27&$format=json&'
+        request4 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27dallas%20cowboys%27&$format=json&'
+        request5 = 'https://user:tDPxzhwtkNX2hYu72irEhlPpFzg36bAcsX3fqbRiGS4=@api.datamarket.azure.com/Bing/Search/News?Query=%27dallas%20mavericks%27&$format=json&'
+        self.query1 = "texas aggies"
+        self.query2 = "texas longhorns"
+        self.query3 = "duke blue devils"
+        self.query4 = "dallas cowboys"
+        self.query5 = "dallas mavericks"
+
+        self.bingRequest(request1, self.query1, 'w');
+        self.bingRequest(request2, self.query2, 'a');
+        self.bingRequest(request3, self.query3, 'a');
+        self.bingRequest(request4, self.query4, 'a');
+        self.bingRequest(request5, self.query5, 'a');
 
 
-
-    def findDistance(self, ptA , cent):
-          """
-          finds cosine similarity as between pt A and pt B
-          Assumes ptA and ptB are both normalized
-          """
-          value=0
-          commonTerms = set()
-          commonTerms = set(self.tfIdfWeight[ptA].keys()).intersection(set(cent))
-          for word in commonTerms:
-            value = value + self.tfIdfWeight[ptA][word]*cent[word]
-            #print word
-          return value
-    #def calculateRSS(self, ):
-
-    def findEucledianDist(self, ptA, cent):
-          """
-          finds eucledian distance as between pt A and pt B
-          Assumes ptA and ptB are both normalized
-          """
-          value=0
-          commonTerms = set()
-          commonTerms = set(self.tfIdfWeight[ptA].keys()).union(set(cent.keys()))
-          for word in commonTerms:
-            if word in self.tfIdfWeight[ptA]:
-              if word in cent:
-                value += (cent[word]-self.tfIdfWeight[ptA][word] )*(cent[word]-self.tfIdfWeight[ptA][word] )
-              else:
-                value += (self.tfIdfWeight[ptA][word]*self.tfIdfWeight[ptA][word] )
-            else:
-              value += cent[word]*cent[word]
-            #print word
-
-          return math.sqrt(value)
-  
+            
     def do_parseFile(self,asdfrtg):
         """
         Parse the entire tweet corpus for tf-idf and for pagerank [Run this command first before running any other command]
         """
-        print "Training system.. please wait.."
+        self.query1 = "texas aggies"
+        self.query2 = "texas longhorns"
+        self.query3 = "duke blue devils"
+        self.query4 = "dallas cowboys"
+        self.query5 = "dallas mavericks"
 
-        dict_words=defaultdict(defaultdict)   # { word:  {category:count  }  }
-        vocabulary=set()                      
-        words_category=defaultdict()          # { category: words  }
-        category_size=defaultdict()           # { category: numDocs  }
-        fr=open('bing_all_OP_classify.txt','r')
+
+        print "Parsing file.. please wait.."
+        fr=open('bing_all_OP.txt','r')
         lines = fr.readlines()
         numDocs=float(len(lines))
+        into = defaultdict(set) # {word : {1:2 }}
+        outOf = defaultdict(set) # {word : {1:2 }}
+        allUsers = set()
+        #retweetCount = defaultdict() # {tweetID : num of retweets}
         idf = defaultdict()
-        for line in lines: 
+
+        #numDocs = 4.0
+        for line in lines:
+        #for i in range(0,4):
+          #json_data=json.loads(line)
           json_data = re.split(' === |\n', line, flags = re.UNICODE)
-          rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]+ " === " + json_data[4]
-          category = json_data[4]
-          titleAndDesc = json_data[1]+json_data[2]
-          words = re.split('[\W]+',titleAndDesc,flags=re.UNICODE)
+          rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]
+
           tweetID = json_data[0]
-          self.assignedClass[json_data[0]] = json_data[4]
+          #print "for assigned class: ",json_data[0] , " , " ,json_data[3]
+          self.assignedClass[json_data[0]] = json_data[3]
+          #print "raw tweetText: " , rawTweetText
+          #print "tweetID: ", tweetID
+
+          """
+          tweetID = json_data['id']
+          userScreenName = json_data['user']['screen_name']
+          retweetCount = json_data['retweet_count']
+          numDocs += retweetCount 
+          self.UIDtoScreenName[userID] = userScreenName
+          self.whoTweeted[tweetID] = userID
+          """
+
+          tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
+          #mentions = json_data['entities']['user_mentions']
+
+          #allUsers.add(userID)
           self.actualTweets[tweetID] =rawTweetText 
+          words = tweetText
           docTermFreq = defaultdict()
           for word in words:
             word = word.lower()
@@ -206,335 +221,10 @@ class HelloWorld(cmd.Cmd):
         fr.close()
         #fw.close()
         #print self.tfIdfWeight
-    def do_runKNN(self, asdf):
-        #for k in range(20,21):
-        k = 500
-        self.do_knnClassify(k)
-
-    def do_knnClassify(self,K):
-        print "performing classification"
-        # find  K nearest neighbours first, then allocate this to the max number of classes in this K
-        fr=open('bing_all_OP_classifyTest.txt','r')
-        #print self.dict_words
-        baseTruth = defaultdict()   # { docID : actual category }
-        assignedClass = defaultdict() # { docID : assigned category }
-
-        lines = fr.readlines()
-        docsInCategory = defaultdict(list)
-        numDocs=float(len(lines))
-        for line in lines: 
-          json_data = re.split(' === |\n', line, flags = re.UNICODE)
-          rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]+ " === " + json_data[4]
-          category = json_data[4]
-          tweetID = json_data[0]
-          baseTruth[tweetID] = category
-          titleAndDesc = json_data[1]+json_data[2]
-          words = re.split('[\W]+',titleAndDesc,flags=re.UNICODE)
-          queryWeight = defaultdict()
-
-          #queryText = re.split('[\W]+',q,flags=re.UNICODE)
-          # parse the input test document as query
-          queryText = words
-          #print queryText
-          idfkeys = self.idf.keys()
-          queryTermFreq = defaultdict()
-          for word in queryText:
-            if word not in idfkeys:
-              #print "query word ",word," is not found in the tweet corpus"
-              queryTermFreq[word] = 0.0000000000001
-              self.idf[word] = 0.0000000000001
-              #return
-            word = word.lower()
-            if word in queryTermFreq:
-              queryTermFreq[word] = queryTermFreq[word]+1.0
-            else:
-              queryTermFreq[word] = 1.0
-          #print queryTermFreq
-          sumNorm=0
-          for word in queryTermFreq:
-            if queryTermFreq[word] > 0:
-              queryTermFreq[word] = 1 + math.log(queryTermFreq[word] ,2)
-            else:
-              queryTermFreq[word] = 0
-            if word in idfkeys:
-              queryWeight[word] = queryTermFreq[word] * self.idf[word]
-            else:
-              self.idf[word] = 0.00000000001
-              queryWeight[word] = queryTermFreq[word] * self.idf[word]
-            sumNorm = sumNorm + queryWeight[word]*queryWeight[word]
-          for word in queryWeight:
-            queryWeight[word]= queryWeight[word]/math.sqrt(sumNorm)
-          
-          #print "queryWeight: ",queryWeight
-          ################################ END query processing ##
-
-          score = defaultdict()
-          for docID in self.assignedClass:
-            score[docID] = self.findDistance(docID, queryWeight)
-          #print score
-
-          kNearestDocs = sorted(score.iteritems(), key=lambda t: t[1],reverse=True)[0:K]
-          #print kNearestDocs
-
-          scoreCategory = defaultdict()  # stores the number of docs for each category in kNearestDocs { politics: 50 , entertain: 100, etc }
-
-          for doc in kNearestDocs:
-            category = self.assignedClass[doc[0]]
-            if category in scoreCategory:
-              scoreCategory[category] += doc[1]   #modified KNN
-            else:
-              scoreCategory[category] = doc[1]    #modified KNN
-
-
-          maxCategory = ""
-          finalCategory = ""
-          maxCount = 0
-          #print scoreCategory
-          for category in scoreCategory:
-            if scoreCategory[category] > maxCount:
-               maxCount = scoreCategory[category]
-               maxCategory = category
-               finalCategory = category
-          #print maxCategory
-          if finalCategory in docsInCategory:
-            docsInCategory[finalCategory].append(json_data[4] +" : "+json_data[1])
-          else:
-            docsInCategory[finalCategory] = [ json_data[4]+" : "+json_data[1] ]
-
-          #print "max score : ", maxCount, " final category : ", finalCategory
-          assignedClass[tweetID] = maxCategory
-          
-
-          # score contains the distance between the new test data and every trainin set
-
-          #print words
-          """
-          maxScore =-100000
-          finalCategory = ""
-          #print self.words_category.keys()
-          for category in self.words_category:
-            if category not in score:
-              score[category] = math.log( self.category_size[category]/self.numDocs , 2 )
-            #print "score of category : ",score[category]
-            for word in words:
-              if category in score:
-                if category in self.dict_words[word]:
-                  score[category] += math.log( self.dict_words[word][category] , 2)
-                else:
-                  # add 1 smoothing for words that are not in the classifiction
-                  score[category] += math.log( 1.0/( self.category_size[category]+len(self.vocabulary) ) ,2 )
-              if score[category] > maxScore:
-                maxScore = score[category]
-                finalCategory = category
-          if finalCategory in docsInCategory:
-            docsInCategory[finalCategory].append(json_data[4] +" : "+json_data[1])
-          else:
-            docsInCategory[finalCategory] = [ json_data[4]+" : "+json_data[1] ]
-          #print "max score : ", maxScore , " final category : ", finalCategory
-          assignedClass[tweetID] = finalCategory
-          """
-        #print docsInCategory
-        #"""
-        for category in scoreCategory:
-          print "\n\n\n******************************************************** class: ", category, "  ************************************************\n"
-          for item in docsInCategory[category]:
-            print item
-        #"""
-        print "calculating the F measure : "
-
-        P = 0
-        R = 0
-        TP = defaultdict() 
-        FP = defaultdict()
-        FN = defaultdict()
-        TN = defaultdict()
-
-        for category in scoreCategory:
-          TP[category] = 0
-          FP[category] = 0
-          FN[category] = 0
-          TN[category] = 0
-        for ID in assignedClass:
-          if baseTruth[ID] == assignedClass[ID]:
-            TP[ baseTruth[ID]  ] +=1
-          else:
-            FP [ assignedClass[ID]  ] +=1
-            FN [ baseTruth[ID]  ] +=1
-
-          
-        TP_total = sum([ TP[category] for category in scoreCategory ])
-        FP_total = sum([ FP[category] for category in  scoreCategory])
-        FN_total = sum([ FN[category] for category in  scoreCategory])
-        TN_total = 3*numDocs - (TP_total + FP_total + FN_total)
-
-        print "TP for each category: ",[ TP[category] for category in scoreCategory ]
-        print "FP for each category: ",[ FP[category] for category in scoreCategory ]
-        print "FN for each category: ",[ FN[category] for category in scoreCategory ]
-
-        print "TP: ", TP_total," FP: " , FP_total ," FN: ", FN_total, " TN: ", TN_total
-
-        P = TP_total/float(TP_total + FP_total)
-        R = TP_total/float(TP_total + FN_total)
-        Fscore = float (2 / float ( (( 1/float(P) )+ ( 1/float(R) ) )))
-        print "F measure: ",Fscore
-
-
-        fr.close()
-
-
-                    
-    
-    def do_trainSystem(self, classes):
-        """
-        Parse the entire tweet corpus for tf-idf and for pagerank [Run this command first before running any other command]
-        """
-        print "Training system.. please wait.."
-
-        dict_words=defaultdict(defaultdict)   # { word:  {category:count  }  }
-        vocabulary=set()                      
-        words_category=defaultdict()          # { category: words  }
-        category_size=defaultdict()           # { category: numDocs  }
-        fr=open('bing_all_OP_classify.txt','r')
-        lines = fr.readlines()
-        numDocs=float(len(lines))
-        for line in lines: 
-          json_data = re.split(' === |\n', line, flags = re.UNICODE)
-          rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]+ " === " + json_data[4]
-          category = json_data[4]
-          titleAndDesc = json_data[1]+json_data[2]
-          words = re.split('[\W]+',titleAndDesc,flags=re.UNICODE)
-          for word in words:
-            if category in dict_words[word]:
-              dict_words[word][category]=dict_words[word][category]+1
-            else:
-              dict_words[word][category]=1
-            if category in words_category:
-              words_category[category]=words_category[category]+1
-            else:
-              words_category[category]=1
-              vocabulary.add(word)
-          if category not in category_size:
-            category_size[category]=1
-          else:
-            category_size[category]=category_size[category]+1
-
-
-          tweetID = json_data[0]
-          #print "for assigned class: ",json_data[0] , " , " ,json_data[3]
-          self.assignedClass[json_data[0]] = json_data[4]
-          #print "raw tweetText: " , rawTweetText
-          #print "tweetID: ", tweetID
-
-          tweetText = re.split('[\W]+',rawTweetText,flags=re.UNICODE)
-          #mentions = json_data['entities']['user_mentions']
-
-          #allUsers.add(userID)
-          self.actualTweets[tweetID] =rawTweetText 
-          words = tweetText
-        fr.close()
-        #fw.close()
-        self.dict_words=dict_words
-        self.vocabulary=vocabulary
-        self.words_category=words_category
-        self.category_size = category_size
-        self.numDocs = numDocs
         """
         print "Calculating page rank....... "
         self.do_part2(self)
         """
-
-
-    def do_classification(self, paoijnfrioune):
-          
-        print "performing classification"
-        # P(C) = category_size[C] / numDocs
-        fr=open('bing_all_OP_classifyTest.txt','r')
-        #print self.dict_words
-        baseTruth = defaultdict()   # { docID : actual category }
-        assignedClass = defaultdict() # { docID : assigned category }
-
-        lines = fr.readlines()
-        docsInCategory = defaultdict(list)
-        numDocs=float(len(lines))
-        for line in lines: 
-          json_data = re.split(' === |\n', line, flags = re.UNICODE)
-          rawTweetText = json_data[1] + " === " + json_data[2] + " === " + json_data[3]+ " === " + json_data[4]
-          category = json_data[4]
-          tweetID = json_data[0]
-          baseTruth[tweetID] = category
-          titleAndDesc = json_data[1]+json_data[2]
-          words = re.split('[\W]+',titleAndDesc,flags=re.UNICODE)
-          #print words
-          score = defaultdict()
-          maxScore =-100000
-          finalCategory = ""
-          #print self.words_category.keys()
-          for category in self.words_category:
-            if category not in score:
-              score[category] = math.log( self.category_size[category]/self.numDocs , 2 )
-            #print "score of category : ",score[category]
-            for word in words:
-              if category in score:
-                if category in self.dict_words[word]:
-                  score[category] += math.log( self.dict_words[word][category] , 2)
-                else:
-                  # add 1 smoothing for words that are not in the classifiction
-                  score[category] += math.log( 1.0/( self.category_size[category]+len(self.vocabulary) ) ,2 )
-              if score[category] > maxScore:
-                maxScore = score[category]
-                finalCategory = category
-          if finalCategory in docsInCategory:
-            docsInCategory[finalCategory].append(json_data[4] +" : "+json_data[1])
-          else:
-            docsInCategory[finalCategory] = [ json_data[4]+" : "+json_data[1] ]
-          #print "max score : ", maxScore , " final category : ", finalCategory
-          assignedClass[tweetID] = finalCategory
-        for category in self.words_category:
-          print "\n\n\n******************************************************** class: ", category, "  ************************************************\n"
-          for item in docsInCategory[category]:
-            print item
-
-        print "calculating the F measure : "
-
-        P = 0
-        R = 0
-        TP = defaultdict() 
-        FP = defaultdict()
-        FN = defaultdict()
-        TN = defaultdict()
-
-        for category in self.words_category:
-          TP[category] = 0
-          FP[category] = 0
-          FN[category] = 0
-          TN[category] = 0
-        for ID in assignedClass:
-          if baseTruth[ID] == assignedClass[ID]:
-            TP[ baseTruth[ID]  ] +=1
-          else:
-            FP [ assignedClass[ID]  ] +=1
-            FN [ baseTruth[ID]  ] +=1
-
-          
-        TP_total = sum([ TP[category] for category in self.words_category ])
-        FP_total = sum([ FP[category] for category in self.words_category ])
-        FN_total = sum([ FN[category] for category in self.words_category ])
-        TN_total = 3*numDocs - (TP_total + FP_total + FN_total)
-
-        print "TP for each category: ",[ TP[category] for category in self.words_category ]
-        print "FP for each category: ",[ FP[category] for category in self.words_category ]
-        print "FN for each category: ",[ FN[category] for category in self.words_category ]
-
-        print "TP: ", TP_total," FP: " , FP_total ," FN: ", FN_total, " TN: ", TN_total
-
-        P = TP_total/float(TP_total + FP_total)
-        R = TP_total/float(TP_total + FN_total)
-        Fscore = float (2 / float ( (( 1/float(P) )+ ( 1/float(R) ) )))
-        print "F measure: ",Fscore
-
-
-        fr.close()
-
 
     def findDistance(self, ptA , cent):
           """
@@ -550,28 +240,72 @@ class HelloWorld(cmd.Cmd):
           return value
     #def calculateRSS(self, ):
 
-    def runKmeans(self, K):
+    def do_runKmeans(self, K):
         """ 
         This file calls kMeans function with the desired value of K
         """
         #for k in range(2,10):
-        for k in range(5,6):
-          print "***********************  Running k-means for k = ", k ,"***************************"
+        minRange = 0
+        maxRange = 10
+        for k in range(3,9):
+          print "*******************************************  Running k-means for k = ", k ,"************************************************************"
           maxPurity = 0
-          for i in range(0,10):
-            val = self.kMeans(k)
+          avgPurity = 0
+          avgRI = 0
+          maxRI = 0
+          maxRSS = 0
+          bestList = []
+          avgRSS = 0
+          for i in range(minRange,maxRange):
+            (val,RI,RSS , initCentroids) = self.kMeans(k,0)
+            avgRSS += RSS
+            avgPurity += val
+            avgRI += RI
             if val > maxPurity:
               maxPurity = val
-          print "purity = ", maxPurity
+              maxRI = RI
+              maxRSS = RSS
+              bestList = initCentroids
+          self.initCentroids = bestList   # set the class's random initial centroids to the best result's random initialization
+          
+          # if the above line is commented, then the self.initCentroids will already have the centroids from the prev value
+          (val,RI,RSS , initCentroids) = self.kMeans(k,1)
+          print "\n\n \n For K = ",k,", purity = ", avgPurity/float(maxRange-minRange+1), ", RI : ", avgRI/float(maxRange-minRange+1), ", RSS: ", avgRSS/float(maxRange-minRange+1)
+          (val,RI,RSS , initCentroids) = self.kMeans(k,1)
+
+          print "\n For K = ",k,", modified cluster:  purity = ", val, ", RI : ", RI, ", RSS: ", RSS
+
+    def findEucledianDist(self, ptA, cent):
+          """
+          finds eucledian distance as between pt A and pt B
+          Assumes ptA and ptB are both normalized
+          """
+          value=0
+          commonTerms = set()
+          commonTerms = set(self.tfIdfWeight[ptA].keys()).union(set(cent.keys()))
+          for word in commonTerms:
+            if word in self.tfIdfWeight[ptA]:
+              if word in cent:
+                value += (cent[word]-self.tfIdfWeight[ptA][word] )*(cent[word]-self.tfIdfWeight[ptA][word] )
+              else:
+                value += (self.tfIdfWeight[ptA][word]*self.tfIdfWeight[ptA][word] )
+            else:
+              value += cent[word]*cent[word]
+            #print word
+
+          return (value)
+  
 
 
-    def kMeans(self,K):
+    def kMeans(self,K , output):
         RSSprev = 1000000
         RSS = 0
-        allClusters = []
         #K=5
         allDocuments = [item for item in self.tfIdfWeight]  # a list of all the documents 
-        initialCentroids =  random.sample(allDocuments , K)
+        if output == 0:
+          initialCentroids =  random.sample(allDocuments , K) # list of all initial centroids
+        else:
+          initialCentroids = self.initCentroids
         allClusters = defaultdict(list)
 
         RSS=0
@@ -586,8 +320,11 @@ class HelloWorld(cmd.Cmd):
             if val > minVal:
               minVal = val
               closestCentroid = centroid
-              RSS = RSS + val
+
           allClusters[closestCentroid].append(doc)
+          dist =  self.findEucledianDist(doc,self.tfIdfWeight[closestCentroid] )
+          RSS = RSS + dist
+
         #print allClusters
         #print "initial RSS: " , RSS
 
@@ -601,7 +338,7 @@ class HelloWorld(cmd.Cmd):
         #print allClustersList
         numIterations = 0
 
-        while math.fabs( RSSprev - RSS ) > 0.0000000001:
+        while math.fabs( RSSprev - RSS ) > 0.0001:
           RSSprev = RSS
           numIterations +=1
           # recalculate the clusters and assign the RSSprev = RSS
@@ -624,12 +361,31 @@ class HelloWorld(cmd.Cmd):
                   centroid[term] += pointTerms[term]
                 else:
                   centroid[term] = pointTerms[term]
-          
+              # normalize centroids
+            sumNorm=0
             for term in centroid:
               centroid[term] = centroid[term]/float(numPoints)
-          
-            allClusterCentroids[i] = centroid
-          
+              sumNorm += centroid[term]*centroid[term]
+            for term in centroid:
+              centroid[term] = centroid[term]/math.sqrt(sumNorm)
+            bestCent=centroid
+            """ mediod calculation
+            minDist = 10000
+            bestCent = defaultdict()
+            for point in cluster:
+              dist = self.findEucledianDist(point , centroid)
+              if minDist > dist:
+                minDist = dist
+                bestCent = self.tfIdfWeight[point]
+
+            #"""
+            #print centroid
+
+
+   
+
+            allClusterCentroids[i] = bestCent
+           
           #print allClusterCentroids[0]
           
           # calculate the new RSS and then perform the new clustering based on the new centroids 
@@ -656,11 +412,13 @@ class HelloWorld(cmd.Cmd):
                 minVal = val
                 #print "minVal: ",minVal
                 closestCentroidIndex = i
-                RSS = RSS + val
-              #print "closest index: ",closestCentroidIndex
+                              #print "closest index: ",closestCentroidIndex
             #print "final closest index: ",closestCentroidIndex
             #print "newAllClustersList: ",newAllClustersList[closestCentroidIndex]
             newAllClustersList[closestCentroidIndex].append(doc)
+            dist =  self.findEucledianDist(doc,newClusterCentroids[closestCentroidIndex] )
+            RSS = RSS + dist
+
             #x = input("press to continue")
           #print newAllClustersList
           
@@ -677,27 +435,35 @@ class HelloWorld(cmd.Cmd):
             allClustersList.append(tmpList)
           #allClustersList = newAllClustersList
 
-        # printing all the clusters here
+        """ printing all the clusters here
+        if output == 1:
+          for i in range(0,len(newAllClustersList)):
+            cluster = newAllClustersList[i]
+            print "\n\n\ncluster ", i , " : number of documents in this cluster: " ,len(cluster) 
+            for ID in cluster:
+              text = re.split(' === |\n ', self.actualTweets[ID], flags = re.UNICODE)
+              #print len(text)
+              print text[2], " : ", text[0]
         #"""
+
+
+        #print "====================================  Calculating Purity: ======================================="
+        self.initCentroids = []
+        for cluster in allClustersList:
+          somePt = random.sample(cluster , 1)
+          self.initCentroids.append(somePt[0])
+        #print "self.initCentroids : ",self.initCentroids
+        #print "initial Centroids : ",initialCentroids
+
+
+        purity = 0
         for i in range(0,len(newAllClustersList)):
           cluster = newAllClustersList[i]
-          print "\n\n\ncluster ", i , " : number of documents in this cluster: " ,len(cluster) 
-          for ID in cluster:
-            text = re.split(' === |\n ', self.actualTweets[ID], flags = re.UNICODE)
-            #print len(text)
-            print text[2], " : ", text[0]
-        #"""
-
-
-        print "====================================  Calculating Purity: ======================================="
-        
-        purity = 0
-        for cluster in newAllClustersList:
           purityScale = defaultdict()
           for item in cluster:
             text = re.split(' === |\n', self.actualTweets[item], flags = re.UNICODE)
             word = text[2]
-            self.assignedCluster[item] = word
+            self.assignedCluster[item] = i
             if word in purityScale:
               purityScale[word] += 1
             else:
@@ -714,7 +480,7 @@ class HelloWorld(cmd.Cmd):
         purityPercent =  100*purity/float(len(allDocuments))
 
 
-        print "====================================  Calculating RI: ======================================="
+        #print "====================================  Calculating RI: ======================================="
         TP=0
         FN=0
         FP=0
@@ -722,26 +488,32 @@ class HelloWorld(cmd.Cmd):
 
         for doc1 in allDocuments:
           for doc2 in allDocuments:
+            #print "d1 class: ",self.assignedClass[doc1] , " d2 class: ",self.assignedClass[doc2] 
+            #print "d1 cluster: ",self.assignedCluster[doc1] , " d2 cluster: ",self.assignedCluster[doc2] 
+
             if self.assignedClass[doc1] == self.assignedClass[doc2]:
               if self.assignedCluster[doc1] == self.assignedCluster[doc2]:
                 TP +=1
               else:
                 FN +=1
-            if self.assignedClass[doc1] != self.assignedClass[doc2] :
+            elif self.assignedClass[doc1] != self.assignedClass[doc2] :
               if self.assignedCluster[doc1] == self.assignedCluster[doc2]:
                 FP +=1
               else:
                 TN +=1
+            #y = input("enter")
 
-        print "TP: ", TP , ' TN: ', TN, ' FP: ', FP, ' FN: ', FN
-        RI = (TP+TN)/(TP+TN+FP+FN)
+        #print "TP: ", TP , ' TN: ', TN, ' FP: ', FP, ' FN: ', FN
+        RI = (TP+TN)/float(TP+TN+FP+FN)
+        #if output == 1:
+          #print "purity percent: ",purityPercent, "% , RI: ", RI," RSS: ", RSS, " number of iterations to converge: ", numIterations
+        #self.initCentroids = newClusterCentroids
+
+
 
         
         print "purity percent: ",purityPercent, "% , RI: ", RI," RSS: ", RSS, " number of iterations to converge: ", numIterations
-
-        
-        
-        return purityPercent
+        return (purityPercent, RI, RSS, initialCentroids)
 
 
 

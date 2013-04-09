@@ -1,0 +1,115 @@
+*******************************************  Running k-means for k =  3 ************************************************************
+purity percent:  46.0 % , RI:  0.682222222222  RSS:  220.356862052  number of iterations to converge:  7
+purity percent:  36.0 % , RI:  0.653333333333  RSS:  221.945158069  number of iterations to converge:  6
+purity percent:  45.3333333333 % , RI:  0.679111111111  RSS:  220.573213972  number of iterations to converge:  4
+purity percent:  49.3333333333 % , RI:  0.692  RSS:  220.172451124  number of iterations to converge:  7
+purity percent:  47.3333333333 % , RI:  0.679022222222  RSS:  220.67935837  number of iterations to converge:  6
+purity percent:  56.0 % , RI:  0.751377777778  RSS:  216.991019606  number of iterations to converge:  5
+purity percent:  58.6666666667 % , RI:  0.805955555556  RSS:  214.613583449  number of iterations to converge:  4
+purity percent:  51.3333333333 % , RI:  0.708711111111  RSS:  218.638191469  number of iterations to converge:  5
+purity percent:  37.3333333333 % , RI:  0.6536  RSS:  222.56541111  number of iterations to converge:  3
+purity percent:  58.6666666667 % , RI:  0.760622222222  RSS:  216.657132474  number of iterations to converge:  5
+purity percent:  58.6666666667 % , RI:  0.805955555556  RSS:  214.613583449  number of iterations to converge:  4
+
+
+ 
+ For K =  3 , purity =  44.1818181818 , RI :  0.64235959596 , RSS:  199.381125609
+purity percent:  60.0 % , RI:  0.788088888889  RSS:  216.358815566  number of iterations to converge:  5
+
+ For K =  3 , modified cluster:  purity =  60.0 , RI :  0.788088888889 , RSS:  216.358815566
+*******************************************  Running k-means for k =  4 ************************************************************
+purity percent:  61.3333333333 % , RI:  0.8008  RSS:  212.251603977  number of iterations to converge:  6
+purity percent:  36.0 % , RI:  0.672533333333  RSS:  217.804002878  number of iterations to converge:  3
+purity percent:  40.6666666667 % , RI:  0.676622222222  RSS:  217.91636521  number of iterations to converge:  4
+purity percent:  36.6666666667 % , RI:  0.684177777778  RSS:  217.694879896  number of iterations to converge:  3
+purity percent:  38.0 % , RI:  0.6872  RSS:  218.544428308  number of iterations to converge:  3
+purity percent:  56.0 % , RI:  0.748977777778  RSS:  213.216685585  number of iterations to converge:  4
+purity percent:  55.3333333333 % , RI:  0.744711111111  RSS:  213.411875525  number of iterations to converge:  6
+purity percent:  42.0 % , RI:  0.712444444444  RSS:  214.656058276  number of iterations to converge:  3
+purity percent:  54.6666666667 % , RI:  0.743733333333  RSS:  213.344439839  number of iterations to converge:  4
+purity percent:  58.6666666667 % , RI:  0.7696  RSS:  211.721811238  number of iterations to converge:  4
+purity percent:  61.3333333333 % , RI:  0.8008  RSS:  212.251603977  number of iterations to converge:  6
+
+
+ 
+ For K =  4 , purity =  43.5757575758 , RI :  0.658254545455 , RSS:  195.505650066
+purity percent:  60.6666666667 % , RI:  0.792711111111  RSS:  209.611603462  number of iterations to converge:  5
+
+ For K =  4 , modified cluster:  purity =  60.6666666667 , RI :  0.792711111111 , RSS:  209.611603462
+*******************************************  Running k-means for k =  5 ************************************************************
+purity percent:  58.0 % , RI:  0.7576  RSS:  208.705025719  number of iterations to converge:  5
+purity percent:  58.6666666667 % , RI:  0.773955555556  RSS:  207.60549168  number of iterations to converge:  3
+purity percent:  56.6666666667 % , RI:  0.769866666667  RSS:  207.180427319  number of iterations to converge:  3
+purity percent:  50.0 % , RI:  0.726666666667  RSS:  210.187393278  number of iterations to converge:  4
+purity percent:  55.3333333333 % , RI:  0.755733333333  RSS:  208.408466183  number of iterations to converge:  3
+purity percent:  56.0 % , RI:  0.782488888889  RSS:  206.253982741  number of iterations to converge:  3
+purity percent:  58.0 % , RI:  0.765777777778  RSS:  208.836725394  number of iterations to converge:  3
+purity percent:  36.6666666667 % , RI:  0.679733333333  RSS:  215.51126928  number of iterations to converge:  3
+purity percent:  66.0 % , RI:  0.813066666667  RSS:  206.389734438  number of iterations to converge:  4
+purity percent:  78.0 % , RI:  0.873244444444  RSS:  201.477070961  number of iterations to converge:  5
+purity percent:  78.0 % , RI:  0.873244444444  RSS:  201.477070961  number of iterations to converge:  5
+
+
+ 
+ For K =  5 , purity =  52.1212121212 , RI :  0.69983030303 , RSS:  189.141416999
+purity percent:  64.6666666667 % , RI:  0.816888888889  RSS:  203.050058324  number of iterations to converge:  8
+
+ For K =  5 , modified cluster:  purity =  64.6666666667 , RI :  0.816888888889 , RSS:  203.050058324
+*******************************************  Running k-means for k =  6 ************************************************************
+purity percent:  64.6666666667 % , RI:  0.802755555556  RSS:  200.344174969  number of iterations to converge:  5
+purity percent:  44.0 % , RI:  0.736888888889  RSS:  204.999383895  number of iterations to converge:  4
+purity percent:  50.0 % , RI:  0.762666666667  RSS:  204.208791727  number of iterations to converge:  3
+purity percent:  50.6666666667 % , RI:  0.739644444444  RSS:  204.251114849  number of iterations to converge:  4
+purity percent:  58.0 % , RI:  0.765688888889  RSS:  205.030917945  number of iterations to converge:  6
+purity percent:  74.6666666667 % , RI:  0.852977777778  RSS:  200.1030722  number of iterations to converge:  4
+purity percent:  82.6666666667 % , RI:  0.875288888889  RSS:  196.175384897  number of iterations to converge:  3
+purity percent:  72.0 % , RI:  0.845244444444  RSS:  197.781514252  number of iterations to converge:  3
+purity percent:  50.0 % , RI:  0.7496  RSS:  207.287847446  number of iterations to converge:  4
+purity percent:  69.3333333333 % , RI:  0.827022222222  RSS:  198.471955669  number of iterations to converge:  3
+purity percent:  82.6666666667 % , RI:  0.875288888889  RSS:  196.175384897  number of iterations to converge:  3
+
+
+ 
+ For K =  6 , purity =  56.0 , RI :  0.723434343434 , RSS:  183.51401435
+purity percent:  68.0 % , RI:  0.818933333333  RSS:  200.257425936  number of iterations to converge:  3
+
+ For K =  6 , modified cluster:  purity =  68.0 , RI :  0.818933333333 , RSS:  200.257425936
+*******************************************  Running k-means for k =  7 ************************************************************
+purity percent:  75.3333333333 % , RI:  0.848  RSS:  195.764236294  number of iterations to converge:  4
+purity percent:  74.0 % , RI:  0.822755555556  RSS:  197.701061724  number of iterations to converge:  5
+purity percent:  78.0 % , RI:  0.872622222222  RSS:  192.821831928  number of iterations to converge:  3
+purity percent:  68.6666666667 % , RI:  0.8112  RSS:  195.25007228  number of iterations to converge:  3
+purity percent:  57.3333333333 % , RI:  0.776622222222  RSS:  199.364889276  number of iterations to converge:  3
+purity percent:  57.3333333333 % , RI:  0.776177777778  RSS:  200.226124887  number of iterations to converge:  3
+purity percent:  84.6666666667 % , RI:  0.875733333333  RSS:  191.027983454  number of iterations to converge:  4
+purity percent:  58.0 % , RI:  0.779111111111  RSS:  197.143712898  number of iterations to converge:  4
+purity percent:  74.0 % , RI:  0.849866666667  RSS:  190.968605902  number of iterations to converge:  3
+purity percent:  70.0 % , RI:  0.825777777778  RSS:  195.977958058  number of iterations to converge:  3
+purity percent:  84.6666666667 % , RI:  0.875733333333  RSS:  191.027983454  number of iterations to converge:  4
+
+
+ 
+ For K =  7 , purity =  63.3939393939 , RI :  0.748896969697 , RSS:  177.840588791
+purity percent:  77.3333333333 % , RI:  0.854933333333  RSS:  192.507722546  number of iterations to converge:  5
+
+ For K =  7 , modified cluster:  purity =  77.3333333333 , RI :  0.854933333333 , RSS:  192.507722546
+*******************************************  Running k-means for k =  8 ************************************************************
+purity percent:  59.3333333333 % , RI:  0.794133333333  RSS:  194.611286673  number of iterations to converge:  4
+purity percent:  79.3333333333 % , RI:  0.849155555556  RSS:  190.12054661  number of iterations to converge:  3
+purity percent:  72.0 % , RI:  0.847288888889  RSS:  187.472831623  number of iterations to converge:  3
+purity percent:  71.3333333333 % , RI:  0.843111111111  RSS:  189.284138496  number of iterations to converge:  5
+purity percent:  72.6666666667 % , RI:  0.838933333333  RSS:  189.873142759  number of iterations to converge:  4
+purity percent:  60.6666666667 % , RI:  0.804533333333  RSS:  193.71788828  number of iterations to converge:  4
+purity percent:  75.3333333333 % , RI:  0.861333333333  RSS:  189.479199711  number of iterations to converge:  4
+purity percent:  65.3333333333 % , RI:  0.799911111111  RSS:  194.971476499  number of iterations to converge:  3
+purity percent:  70.6666666667 % , RI:  0.8224  RSS:  190.725363147  number of iterations to converge:  3
+purity percent:  64.6666666667 % , RI:  0.800711111111  RSS:  190.546689424  number of iterations to converge:  4
+purity percent:  79.3333333333 % , RI:  0.849155555556  RSS:  190.12054661  number of iterations to converge:  3
+
+
+ 
+ For K =  8 , purity =  62.8484848485 , RI :  0.751046464646 , RSS:  173.709323929
+purity percent:  75.3333333333 % , RI:  0.830577777778  RSS:  190.150046923  number of iterations to converge:  3
+
+ For K =  8 , modified cluster:  purity =  75.3333333333 , RI :  0.830577777778 , RSS:  190.150046923
+
