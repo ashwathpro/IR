@@ -222,37 +222,36 @@ class HelloWorld(cmd.Cmd):
         TP = defaultdict() 
         FP = defaultdict()
         FN = defaultdict()
+        TN = defaultdict()
 
         for category in self.words_category:
           TP[category] = 0
           FP[category] = 0
           FN[category] = 0
+          TN[category] = 0
         for ID in assignedClass:
           if baseTruth[ID] == assignedClass[ID]:
             TP[ baseTruth[ID]  ] +=1
           else:
             FP [ assignedClass[ID]  ] +=1
             FN [ baseTruth[ID]  ] +=1
+
+          
         TP_total = sum([ TP[category] for category in self.words_category ])
         FP_total = sum([ FP[category] for category in self.words_category ])
         FN_total = sum([ FN[category] for category in self.words_category ])
+        TN_total = numDocs - (TN_total + FP_total + FN_total)
 
-        print "TP: ", TP_total," FP: " , FP_total ," FN: ", FN_total
+        print "TP for each category: ",[ TP[category] for category in self.words_category ]
+        print "FP for each category: ",[ FP[category] for category in self.words_category ]
+        print "FN for each category: ",[ FN[category] for category in self.words_category ]
+
+        print "TP: ", TP_total," FP: " , FP_total ," FN: ", FN_total, " TN: ", TN_total
 
         P = TP_total/float(TP_total + FP_total)
         R = TP_total/float(TP_total + FN_total)
         Fscore = float (2 / float ( (( 1/float(P) )+ ( 1/float(R) ) )))
         print "F measure: ",Fscore
-
-
-
-
-
-
-
-
-
-
 
 
         fr.close()

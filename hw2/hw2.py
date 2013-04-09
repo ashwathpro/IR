@@ -65,7 +65,7 @@ class HelloWorld(cmd.Cmd):
         """
 
         print "Parsing file.. please wait.."
-        fr=open('mars_tweets_medium.json','r')
+        fr=open('mars_tweets_medium1.json','r')
         lines = fr.readlines()
         numDocs=float(len(lines))
         into = defaultdict(set) # {word : {1:2 }}

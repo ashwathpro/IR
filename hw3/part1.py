@@ -25,6 +25,7 @@ class HelloWorld(cmd.Cmd):
     topics = set()
     assignedClass = defaultdict()   # { docID , query }
     assignedCluster = defaultdict()   # { docID , query }
+    initCentroids = list()    # list of the random initial centroids
     query1 = ""
     query2 = ""
     query3 = ""
@@ -210,9 +211,12 @@ class HelloWorld(cmd.Cmd):
             else:
               self.termFreq[doc][word] = 0
             self.tfIdfWeight[doc][word] = self.termFreq[doc][word]*self.idf[word]
-            sumNorm = sumNorm + self.tfIdfWeight[doc][word]*self.tfIdfWeight[doc][word] 
+
           for word in self.tfIdfWeight[doc]:
-            self.tfIdfWeight[doc][word] =  self.tfIdfWeight[doc][word]/math.sqrt(sumNorm) 
+            sumNorm = sumNorm + self.tfIdfWeight[doc][word]*self.tfIdfWeight[doc][word]
+          for word in self.tfIdfWeight[doc]:
+            self.tfIdfWeight[doc][word] /=  float(math.sqrt(sumNorm))
+
 
         fr.close()
         #fw.close()
@@ -241,25 +245,54 @@ class HelloWorld(cmd.Cmd):
         This file calls kMeans function with the desired value of K
         """
         #for k in range(2,10):
-        for k in range(5,6):
-          print "***********************  Running k-means for k = ", k ,"***************************"
+        for k in range(3,9):
+          print "*******************************************  Running k-means for k = ", k ,"************************************************************"
           maxPurity = 0
           maxRI = 0
+          maxRSS = 0
+          bestList = []
           for i in range(0,10):
-            (val,RI) = self.kMeans(k)
+            (val,RI,RSS , initCentroids) = self.kMeans(k,0)
             if val > maxPurity:
               maxPurity = val
               maxRI = RI
-          print "\n\n \n For K = ",k,", Max purity = ", maxPurity, ", RI : ", maxRI
+              maxRSS = RSS
+              bestList = initCentroids
+          self.initCentroids = bestList   # set the class's random initial centroids to the best result's random initialization
+          (val,RI,RSS , initCentroids) = self.kMeans(k,1)
+          print "\n\n \n For K = ",k,", Max purity = ", maxPurity, ", RI : ", maxRI, ", RSS: ", maxRSS
+
+    def findEucledianDist(self, ptA, cent):
+          """
+          finds eucledian distance as between pt A and pt B
+          Assumes ptA and ptB are both normalized
+          """
+          value=0
+          commonTerms = set()
+          commonTerms = set(self.tfIdfWeight[ptA].keys()).union(set(cent.keys()))
+          for word in commonTerms:
+            if word in self.tfIdfWeight[ptA]:
+              if word in cent:
+                value += (cent[word]-self.tfIdfWeight[ptA][word] )*(cent[word]-self.tfIdfWeight[ptA][word] )
+              else:
+                value += (self.tfIdfWeight[ptA][word]*self.tfIdfWeight[ptA][word] )
+            else:
+              value += cent[word]*cent[word]
+            #print word
+
+          return (value)
+  
 
 
-    def kMeans(self,K):
+    def kMeans(self,K , output):
         RSSprev = 1000000
         RSS = 0
-        allClusters = []
         #K=5
         allDocuments = [item for item in self.tfIdfWeight]  # a list of all the documents 
-        initialCentroids =  random.sample(allDocuments , K)
+        if output == 0:
+          initialCentroids =  random.sample(allDocuments , K) # list of all initial centroids
+        else:
+          initialCentroids = self.initCentroids
         allClusters = defaultdict(list)
 
         RSS=0
@@ -274,8 +307,11 @@ class HelloWorld(cmd.Cmd):
             if val > minVal:
               minVal = val
               closestCentroid = centroid
-              RSS = RSS + val
+
           allClusters[closestCentroid].append(doc)
+          dist =  self.findEucledianDist(doc,self.tfIdfWeight[closestCentroid] )
+          RSS = RSS + dist
+
         #print allClusters
         #print "initial RSS: " , RSS
 
@@ -289,7 +325,7 @@ class HelloWorld(cmd.Cmd):
         #print allClustersList
         numIterations = 0
 
-        while math.fabs( RSSprev - RSS ) > 0.0000000001:
+        while math.fabs( RSSprev - RSS ) > 0.001:
           RSSprev = RSS
           numIterations +=1
           # recalculate the clusters and assign the RSSprev = RSS
@@ -312,10 +348,15 @@ class HelloWorld(cmd.Cmd):
                   centroid[term] += pointTerms[term]
                 else:
                   centroid[term] = pointTerms[term]
-          
+              # normalize centroids
+            sumNorm=0
             for term in centroid:
               centroid[term] = centroid[term]/float(numPoints)
-          
+              sumNorm += centroid[term]*centroid[term]
+            for term in centroid:
+              centroid[term] = centroid[term]/math.sqrt(sumNorm)
+            
+   
             allClusterCentroids[i] = centroid
           
           #print allClusterCentroids[0]
@@ -344,11 +385,13 @@ class HelloWorld(cmd.Cmd):
                 minVal = val
                 #print "minVal: ",minVal
                 closestCentroidIndex = i
-                RSS = RSS + val
-              #print "closest index: ",closestCentroidIndex
+                              #print "closest index: ",closestCentroidIndex
             #print "final closest index: ",closestCentroidIndex
             #print "newAllClustersList: ",newAllClustersList[closestCentroidIndex]
             newAllClustersList[closestCentroidIndex].append(doc)
+            dist =  self.findEucledianDist(doc,newClusterCentroids[closestCentroidIndex] )
+            RSS = RSS + dist
+
             #x = input("press to continue")
           #print newAllClustersList
           
@@ -366,18 +409,18 @@ class HelloWorld(cmd.Cmd):
           #allClustersList = newAllClustersList
 
         # printing all the clusters here
-        #"""
-        for i in range(0,len(newAllClustersList)):
-          cluster = newAllClustersList[i]
-          print "\n\n\ncluster ", i , " : number of documents in this cluster: " ,len(cluster) 
-          for ID in cluster:
-            text = re.split(' === |\n ', self.actualTweets[ID], flags = re.UNICODE)
-            #print len(text)
-            print text[2], " : ", text[0]
-        #"""
+        if output == 1:
+          for i in range(0,len(newAllClustersList)):
+            cluster = newAllClustersList[i]
+            print "\n\n\ncluster ", i , " : number of documents in this cluster: " ,len(cluster) 
+            for ID in cluster:
+              text = re.split(' === |\n ', self.actualTweets[ID], flags = re.UNICODE)
+              #print len(text)
+              print text[2], " : ", text[0]
+        
 
 
-        print "====================================  Calculating Purity: ======================================="
+        #print "====================================  Calculating Purity: ======================================="
         
         purity = 0
         for i in range(0,len(newAllClustersList)):
@@ -403,7 +446,7 @@ class HelloWorld(cmd.Cmd):
         purityPercent =  100*purity/float(len(allDocuments))
 
 
-        print "====================================  Calculating RI: ======================================="
+        #print "====================================  Calculating RI: ======================================="
         TP=0
         FN=0
         FP=0
@@ -426,11 +469,12 @@ class HelloWorld(cmd.Cmd):
                 TN +=1
             #y = input("enter")
 
-        print "TP: ", TP , ' TN: ', TN, ' FP: ', FP, ' FN: ', FN
+        #print "TP: ", TP , ' TN: ', TN, ' FP: ', FP, ' FN: ', FN
         RI = (TP+TN)/float(TP+TN+FP+FN)
-        print "purity percent: ",purityPercent, "% , RI: ", RI," RSS: ", RSS, " number of iterations to converge: ", numIterations
+        if output == 1:
+          print "purity percent: ",purityPercent, "% , RI: ", RI," RSS: ", RSS, " number of iterations to converge: ", numIterations
         
-        return (purityPercent, RI)
+        return (purityPercent, RI, RSS, initialCentroids)
 
 
 
